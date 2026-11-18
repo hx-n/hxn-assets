@@ -77,3 +77,10 @@ Commit and push only when requested. Commit messages are short, contain no
 assistant attribution and cite the full issue ID in a `git-bug:` trailer.
 Close issues in git-bug only when their acceptance criteria are met.
 Git-bug synchronization is separate from source pushes and requires a request.
+
+## Logging
+
+Use core `hxn::log` in hxn-file and `hxn.Log` in asset runtime code, with
+targets `hxn.file` and `hxn.assets`. Applications own levels and the sink.
+Do not log payloads, credentials or remote query strings. Idle native records
+need an application-driven flush; frame loops drain with `hxn.Loop.sync()`.

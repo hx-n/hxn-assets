@@ -2,9 +2,10 @@
 package hxn.file;
 
 /** Platform implementation used by hxn.file.Storage. **/
+@:build(hxn.Log.bind())
 class StorageBackend {
 	@:noCompletion public var hxnRaw:hxn.Handle;
-	@:noCompletion static final hxnMemory = HxnFileMemory.meter;
+	@:keep @:noCompletion static final hxnMemory = HxnFileMemory.meter;
 
 	/** An object for a value the library returned. **/
 	@:noCompletion public static function hxnAdopt(hxnRaw:hxn.Handle):StorageBackend {

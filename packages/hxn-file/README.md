@@ -34,3 +34,9 @@ Consumers normally use the typed asset source/stream API.
 
 See [design and limits](https://github.com/hx-n/hxn-assets/blob/main/docs/design.md)
 and [dependency notices](https://github.com/hx-n/hxn-assets/blob/main/packages/hxn-file/third-party/NOTICES.md).
+
+## Logging
+
+Diagnostics use core `hxn.Log` with target `hxn.file`.
+The application owns `Log.level` and `Log.sink`; frame loops drain native
+records at `hxn.Loop.sync()`, and idle background work uses `Log.flush()`.

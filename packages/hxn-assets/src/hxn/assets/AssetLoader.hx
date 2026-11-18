@@ -85,6 +85,8 @@ class AssetLoader {
 			return Future.rejected(new Exception("asset loader is closed"));
 		if (asset.streamAsset == true)
 			return Future.rejected(new Exception("stream assets require openStream"));
+		if (hxn.Log.enabled(hxn.LogLevel.Debug))
+			hxn.Log.debug('loading ${asset.address}', "hxn.assets");
 		final id = key(asset), found = cache.get(id);
 		if (found != null) {
 			found.tick = ++tick;

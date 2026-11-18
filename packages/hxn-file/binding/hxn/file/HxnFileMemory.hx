@@ -7,5 +7,6 @@ package hxn.file;
 	a delivery does.
 **/
 class HxnFileMemory {
+	@:keep static final logging = hxn.Log.attach(level -> HxnFileNative.log_level(level), () -> HxnFileNative.log_take());
 	public static final meter = new hxn.Gc.Meter(() -> HxnFileNative.memory_held(), () -> HxnFileNative.memory_wanted());
 }

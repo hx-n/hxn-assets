@@ -6,5 +6,5 @@
   "license": "Apache",
   "contributors": ["darmie"],
   "releasenote": "Asynchronous bundled files, saves and preferences across native, mobile and browser runtimes.",
-  "dependencies": { "hxn": "0.3.8" }
+  "dependencies": { "hxn": "0.3.9" }
 }

@@ -10,7 +10,7 @@
   "releasenote": "Asset catalogs and asynchronous loading over portable file storage.",
   "classPath": "src",
   "dependencies": {
-    "hxn": "0.3.8",
+    "hxn": "0.3.9",
     "hxn-file": "0.1.0",
     "format": "3.8.0"
   },

@@ -54,6 +54,10 @@ hxn_status hxn_file_future_take_bool(hxn_handle *self, int32_t *out, hxn_buf *er
 hxn_status hxn_file_future_take_preference(hxn_handle *self, hxn_buf *out, hxn_buf *err);
 hxn_status hxn_file_future_take_remote_frame(hxn_handle *self, hxn_buf *out, hxn_buf *err);
 
+/* Configures capture and takes a bounded diagnostic batch. */
+void hxn_file_log_level(int32_t level);
+hxn_status hxn_file_log_take(hxn_buf *out, hxn_buf *err);
+
 /* The bytes the library's values hold that the host's collector cannot see,
  * and whether the library asked for a collection since the last call. */
 double hxn_file_memory_held(void);

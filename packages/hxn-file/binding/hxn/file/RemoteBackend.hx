@@ -2,10 +2,10 @@
 package hxn.file;
 
 /** URI I/O used by the asset package's remote source and streams. **/
+@:build(hxn.Log.bind())
 class RemoteBackend {
 	@:noCompletion public var hxnRaw:hxn.Handle;
-
-	@:noCompletion static final hxnMemory = HxnFileMemory.meter;
+	@:keep @:noCompletion static final hxnMemory = HxnFileMemory.meter;
 
 	/** An object for a value the library returned. **/
 	@:noCompletion public static function hxnAdopt(hxnRaw:hxn.Handle):RemoteBackend {

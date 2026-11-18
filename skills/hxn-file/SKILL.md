@@ -29,3 +29,9 @@ messages. Reuse the existing browser mailbox and Future delivery; keep transient
 guest pointers out of asynchronous callbacks. Native TLS uses verified roots;
 browser trust and WebSocket header restrictions are browser policy. Keep URI
 transport separate from scoped filesystem path validation.
+
+## Logging
+
+Diagnostics use core `hxn.Log` with target `hxn.file`.
+The application owns `Log.level` and `Log.sink`; frame loops drain native
+records at `hxn.Loop.sync()`, and idle background work uses `Log.flush()`.

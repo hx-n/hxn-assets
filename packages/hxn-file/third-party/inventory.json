@@ -2,7 +2,7 @@
   "inputs": [
     {
       "path": "Cargo.lock",
-      "sha256": "750570e355a4fcb7c5534d40ff067c0e2003a5768cb69f71d58c73cec4f62090"
+      "sha256": "049306349938a84cb4b69e5b0fc57d31eafecc21db5bee7b644e9c5645bb3b91"
     },
     {
       "path": "packages/hxn-file/Cargo.toml",
@@ -271,42 +271,42 @@
     },
     {
       "name": "hxn",
-      "version": "0.3.8",
+      "version": "0.3.9",
       "license": "Apache-2.0",
       "repository": "https://github.com/hx-n/hxn",
-      "source": "git+https://github.com/hx-n/hxn.git?tag=v0.3.8#763216a473053ecdf57ecef287b6cb8cfdd661a9",
+      "source": "git+https://github.com/hx-n/hxn.git?tag=v0.3.9#562fc8b8bd214c7339baeea92c7aa7c0b7bffc9b",
       "files": [
-        "licenses/hxn-0.3.8/LICENSE"
+        "licenses/hxn-0.3.9/LICENSE"
       ]
     },
     {
       "name": "hxn-abi",
-      "version": "0.3.8",
+      "version": "0.3.9",
       "license": "Apache-2.0",
       "repository": "https://github.com/hx-n/hxn",
-      "source": "git+https://github.com/hx-n/hxn.git?tag=v0.3.8#763216a473053ecdf57ecef287b6cb8cfdd661a9",
+      "source": "git+https://github.com/hx-n/hxn.git?tag=v0.3.9#562fc8b8bd214c7339baeea92c7aa7c0b7bffc9b",
       "files": [
-        "licenses/hxn-abi-0.3.8/LICENSE"
+        "licenses/hxn-abi-0.3.9/LICENSE"
       ]
     },
     {
       "name": "hxn-future",
-      "version": "0.3.8",
+      "version": "0.3.9",
       "license": "Apache-2.0",
       "repository": "https://github.com/hx-n/hxn",
-      "source": "git+https://github.com/hx-n/hxn.git?tag=v0.3.8#763216a473053ecdf57ecef287b6cb8cfdd661a9",
+      "source": "git+https://github.com/hx-n/hxn.git?tag=v0.3.9#562fc8b8bd214c7339baeea92c7aa7c0b7bffc9b",
       "files": [
-        "licenses/hxn-future-0.3.8/LICENSE"
+        "licenses/hxn-future-0.3.9/LICENSE"
       ]
     },
     {
       "name": "hxn-macros",
-      "version": "0.3.8",
+      "version": "0.3.9",
       "license": "Apache-2.0",
       "repository": "https://github.com/hx-n/hxn",
-      "source": "git+https://github.com/hx-n/hxn.git?tag=v0.3.8#763216a473053ecdf57ecef287b6cb8cfdd661a9",
+      "source": "git+https://github.com/hx-n/hxn.git?tag=v0.3.9#562fc8b8bd214c7339baeea92c7aa7c0b7bffc9b",
       "files": [
-        "licenses/hxn-macros-0.3.8/LICENSE"
+        "licenses/hxn-macros-0.3.9/LICENSE"
       ]
     },
     {

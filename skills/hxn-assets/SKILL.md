@@ -64,3 +64,9 @@ Remote transport tests use local HTTP(S)/WS/WSS servers under tests/assets/remot
 Its temporary-CA/browser flag setup is test-only. CRDT assets (local durable edits,
 causal merge, offline journals and remote sync) remain a repository-owned issue
 plan; do not claim the transport itself implements a CRDT.
+
+## Logging
+
+Diagnostics use core `hxn.Log` with target `hxn.assets`.
+The application owns `Log.level` and `Log.sink`; frame loops drain native
+records at `hxn.Loop.sync()`, and idle background work uses `Log.flush()`.

@@ -51,3 +51,9 @@ hxn assets stage --source assets --out build/assets --content-addressed
 See [types, metadata and lifecycle](https://github.com/hx-n/hxn-assets/blob/main/docs/design.md#asset-declarations),
 [conventions](https://github.com/hx-n/hxn-assets/blob/main/docs/conventions.md) and
 [codec notices](https://github.com/hx-n/hxn-assets/blob/main/packages/hxn-assets/third-party/NOTICES.md).
+
+## Logging
+
+Diagnostics use core `hxn.Log` with target `hxn.assets`.
+The application owns `Log.level` and `Log.sink`; frame loops drain native
+records at `hxn.Loop.sync()`, and idle background work uses `Log.flush()`.

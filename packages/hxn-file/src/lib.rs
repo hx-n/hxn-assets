@@ -97,6 +97,7 @@ impl StorageBackend {
 impl StorageBackend {
     pub fn new(application: &str, assets: &str, data: &str) -> Result<Self, String> {
         path::application(application)?;
+        hxn::log::debug!(target: "hxn.file", "opening scoped file storage");
         Ok(Self {
             inner: Arc::new(Store::new(application, assets, data)?),
             #[cfg(not(target_family = "wasm"))]
