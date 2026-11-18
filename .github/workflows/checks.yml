@@ -1,0 +1,30 @@
+name: Checks
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+defaults:
+  run:
+    shell: bash
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+        with:
+          runtime: checks
+      - run: cargo fmt --all --check
+      - run: cargo clippy --workspace --all-targets -- -D warnings
+      - run: python3 -c 'import subprocess; subprocess.run(["cargo", "test", "--workspace", "--locked"], timeout=600, check=True)'
+      - run: python3 scripts/third_party_notices.py --output packages/hxn-file/third-party --check
+      - run: haxelib install formatter 1.18.0 --always --quiet
+      - run: haxelib run formatter --check -s packages/hxn-file/sources -s packages/hxn-assets/src -s tests
+      - name: Catalogs, typed payloads, annotations and compiler reuse
+        run: python3 tests/assets/run.py --hxn target/hxn-source --ash ash

@@ -27,6 +27,7 @@ def main():
     cli = options.cli or options.hxn / "target/debug/hxn"
     directory = ROOT / "target/assets-runtimes" / options.main
     directory.mkdir(parents=True, exist_ok=True)
+    executable = ".exe" if os.name == "nt" else ""
     for mode in options.modes:
         destination = directory / mode
         destination.mkdir(exist_ok=True)
@@ -69,7 +70,7 @@ def main():
                     run([runtime, *mode_args, destination / "main.hl", destination / "assets", destination / "data"], timeout=60)
             elif target == "cppia":
                 run([*compiler, "-cppia", destination / "main.cppia"])
-                run([ROOT / "target/hxn/file/cppia/host/out/Host", destination / "main.cppia", destination / "assets", destination / "data"], timeout=60)
+                run([ROOT / ("target/hxn/file/cppia/host/out/Host" + executable), destination / "main.cppia", destination / "assets", destination / "data"], timeout=60)
             else:
                 if wasm:
                     compiler += ["-D", "HXCPP_LINK_EMSCRIPTEN_EXT=.html", "-D", "HXCPP_LINK_EMRUN"]
@@ -87,7 +88,7 @@ def main():
                         if file.exists():
                             log.write(file.read_text())
                 else:
-                    run([destination / ("out/"+options.main), destination / "out/assets", destination / "data"], timeout=60)
+                    run([destination / ("out/"+options.main+executable), destination / "out/assets", destination / "data"], timeout=60)
         if options.expect not in log_path.read_text():
             raise RuntimeError(f"{mode} did not report success; see {log_path}")
         print(f"PASS: {mode} {options.main} integration", flush=True)

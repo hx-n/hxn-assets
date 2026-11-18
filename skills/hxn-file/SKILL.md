@@ -35,3 +35,11 @@ transport separate from scoped filesystem path validation.
 Diagnostics use core `hxn.Log` with target `hxn.file`.
 The application owns `Log.level` and `Log.sink`; frame loops drain native
 records at `hxn.Loop.sync()`, and idle background work uses `Log.flush()`.
+
+## Repository CI
+
+The [CI workflows](https://github.com/hx-n/hxn-assets/tree/main/.github/workflows)
+run Rust/macro checks, native file/asset/remote fixtures on Linux, macOS and
+Windows, and real Chrome pages in Ash and both hxcpp wasm modes. Reuse the
+bounded runners under tests/ci; they are repository test tooling, not consumer
+commands. Mobile bundle/APK persistence still requires device verification.

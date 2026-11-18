@@ -1,7 +1,7 @@
 # Design
 
 This monorepo separates platform I/O (`packages/hxn-file`) from asset metadata
-and byte loading (`packages/hxn-assets`). hxn-file pins hxn 0.3.8 for generated
+and byte loading (`packages/hxn-assets`). hxn-file pins hxn 0.3.9 for generated
 bindings; hxn-assets is Haxe and uses those bindings through `FileSource`.
 
 ## File ownership and persistence

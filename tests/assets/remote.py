@@ -10,6 +10,7 @@ import socket
 import ssl
 import struct
 import subprocess
+import sys
 import tempfile
 import threading
 
@@ -67,6 +68,7 @@ def main():
     parser.add_argument("--ash",default="ash")
     parser.add_argument("--cli",type=Path)
     parser.add_argument("--hxn",type=Path,default=ROOT.parent/"hxn")
+    parser.add_argument("--chrome")
     options=parser.parse_args()
     (ROOT/"target").mkdir(exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="asset-remote-",dir=ROOT/"target") as work:
@@ -90,7 +92,7 @@ def main():
         (work/"RemoteAssets.hx").write_text('@:build(hxn.assets.Assets.build()) class RemoteAssets {'+''.join('@:asset('+literal(uri)+') @:dynamicAsset public static var '+name+':'+type+';' for name,uri,type in fields)+'}')
         try:
             # The browser flag trusts this temporary TLS fixture only. Native tests trust its CA explicitly.
-            execute(["python3",ROOT/"tests/assets/runtimes.py",*options.modes,"--hxn",options.hxn,"--ash",options.ash,*(["--cli",options.cli] if options.cli else []),"--main","RemoteCheck","--class-path",work,"--expect","PASS: remote URI","--browser-arg=--ignore-certificate-errors"],timeout=1200)
+            execute([sys.executable,ROOT/"tests/assets/runtimes.py",*options.modes,"--hxn",options.hxn,"--ash",options.ash,*(["--cli",options.cli] if options.cli else []),*(["--chrome",options.chrome] if options.chrome else []),"--main","RemoteCheck","--class-path",work,"--expect","PASS: remote URI","--browser-arg=--ignore-certificate-errors"],timeout=1200)
         finally:
             for server in servers:server.shutdown();server.server_close()
             for thread in threads:thread.join(timeout=5)

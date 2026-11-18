@@ -1,0 +1,48 @@
+name: Browser
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+defaults:
+  run:
+    shell: bash
+jobs:
+  check:
+    name: ${{ matrix.mode }}, Chrome
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [wasm, emcc, emcc-threads]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+        with:
+          runtime: browser
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Emscripten toolchain
+        run: |
+          rustup target add wasm32-unknown-emscripten
+          git clone --depth 1 https://github.com/emscripten-core/emsdk "$RUNNER_TEMP/emsdk"
+          "$RUNNER_TEMP/emsdk/emsdk" install 5.0.7
+          "$RUNNER_TEMP/emsdk/emsdk" activate 5.0.7
+      - name: Files, annotated assets and remote transports in Chrome
+        env:
+          MODE: ${{ matrix.mode }}
+        run: |
+          source "$RUNNER_TEMP/emsdk/emsdk_env.sh"
+          unset CC CXX
+          python3 tests/ci/run.py "$MODE" --chrome "$(command -v google-chrome)"
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-logs-${{ matrix.mode }}
+          path: target/assets-runtimes/**/run.log

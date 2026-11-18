@@ -1,0 +1,36 @@
+name: Native
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+defaults:
+  run:
+    shell: bash
+jobs:
+  check:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+        with:
+          runtime: native
+      - name: Platform Rust tests
+        run: python3 -c 'import subprocess; subprocess.run(["cargo", "test", "--workspace", "--locked"], timeout=600, check=True)'
+      - name: Files, annotated assets and remote transports
+        run: python3 tests/ci/run.py native
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-logs-${{ matrix.os }}
+          path: target/assets-runtimes/**/run.log
