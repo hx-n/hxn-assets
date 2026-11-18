@@ -116,7 +116,12 @@ class RemoteCheck {
 				RemoteAssets.unload();
 				loader.close();
 				Sys.println("PASS: remote URI values, HTTP chunks, WS/WSS frames and cancellation");
+				#if hxn_file_mobile
+				Sys.println("PASS: mobile remote " + haxe.Resource.getString("mobile-nonce"));
+				#end
+				#if !hxn_mobile_android
 				hxn.Loop.exit(0);
+				#end
 			}, error -> {
 				Sys.stderr().writeString(Std.string(error) + "\n");
 				Sys.exit(1);

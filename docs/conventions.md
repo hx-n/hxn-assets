@@ -62,8 +62,30 @@ test-only Chrome flag for the temporary certificate. Include TLS rejection,
 fragmented/empty messages, backpressure, errors and pending-read cancellation.
 Do not copy that test browser flag into application tooling.
 Exercise installed haxelib discovery and direct Haxe compilation as well as hxn.
-Mobile verification must read actual bundle/APK assets and persist data across
-app launches; compiling alone is not a device pass. Report runtimes not run.
+On macOS, mobile verification uses `python3 tests/mobile/run.py ios-sim|android hl|cpp
+--device <simulator-UDID-or-adb-serial>` from the workspace root. The selected
+simulator/emulator must already be booted. `--hxn`, `--cli` and `--ash` select
+matching local tools. Ash uses its native AOT target. The hxcpp iOS simulator
+host uses x86_64 and requires a simulator runtime supporting Intel apps (iOS 17
+with Rosetta on Apple Silicon). Install the target standard libraries for the
+repository-pinned Rust toolchain. Android uses an arm64 device/emulator, SDK 35,
+build-tools 36.1.0, NDK 27.0.12077973 and JDK 17 or newer; `ANDROID_HOME`,
+`ANDROID_NDK_ROOT` and `JAVA_HOME` override local SDK locations.
+
+These test-only hosts install a signed simulator app or APK containing staged
+assets. Three fresh process launches check default NSBundle/AAssetManager reads,
+typed JSON/PNG decoding and content IDs, save/Unicode-preference persistence,
+a shared Rust/Haxe log sink, and the real remote fixture. Each build has a
+unique success nonce. Android initializes ndk-context in the test adapter’s
+Cargo graph, forwards only the fixture ports, and finishes its Activity after
+the Haxe event loop drains. Apps and owned port mappings are removed afterward;
+build output and captured logs remain under target/mobile. Timeouts bound all
+runtime invocations. Final app hosts link platform libraries after hxcpp static
+archive construction; the fixture defers those libraries in its private archive
+link XML. The Ash Android host supplies the API suffix in its final clang target.
+This wiring belongs to tests/, not published hxn CLI tooling. A simulator/emulator
+pass does not verify physical devices, suspend/resume or network transitions.
+Report runtimes not run.
 Windows is not verified until its CI has passed.
 
 The Checks workflow runs Rust, formatting, dependency-notice and annotation
@@ -76,8 +98,8 @@ runtime invocations; failed runtime logs are retained as CI artifacts.
 Native fixture runners set the binding directory on the VM loader search path,
 including `PATH` on Windows, matching `hxn check`. Browser profile cleanup is
 best-effort; process exit status and the expected fixture success marker still
-determine the test result. Mobile bundle/APK
-persistence and device lifecycle verification remain separate real-device work.
+determine the test result. The mobile runner is a separate local verification;
+these CI workflows do not exercise mobile apps or device lifecycle transitions.
 
 ## Packaging and commits
 

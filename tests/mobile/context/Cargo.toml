@@ -1,0 +1,10 @@
+[package]
+name = "hxn-file-test-context"
+version = "0.0.0"
+edition = "2024"
+publish = false
+[lib]
+crate-type = ["rlib"]
+[dependencies]
+ndk-context = "=0.1.1"
+[workspace]

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Run local HTTP(S) and WS(S) fixtures through the real asset runtimes."""
 import argparse
+from contextlib import contextmanager
 import base64
 import hashlib
 import http.server
@@ -62,14 +63,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
         self.send_response(status);self.cors();self.send_header("Content-Type","application/octet-stream");self.send_header("Content-Length",str(len(body)));self.end_headers();self.wfile.write(body)
 
 def execute(args,timeout=120,**kw):subprocess.run([str(v) for v in args],check=True,timeout=timeout,**kw)
-def main():
-    parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("modes",nargs="+")
-    parser.add_argument("--ash",default="ash")
-    parser.add_argument("--cli",type=Path)
-    parser.add_argument("--hxn",type=Path,default=ROOT.parent/"hxn")
-    parser.add_argument("--chrome")
-    options=parser.parse_args()
+@contextmanager
+def fixture():
     (ROOT/"target").mkdir(exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="asset-remote-",dir=ROOT/"target") as work:
         work=Path(work)
@@ -91,9 +86,20 @@ def main():
         fields=[('Snapshot',f'https://localhost:{secure}/snapshot','{revision:Int}'),('QueuedMessages',f'ws://localhost:{plain}/queued-error','hxn.assets.AssetStream<{seq:Int}>'),('Messages',f'ws://localhost:{plain}/messages','hxn.assets.AssetStream<haxe.io.Bytes>'),('TypedMessages',f'ws://localhost:{plain}/json','hxn.assets.AssetStream<{seq:Int}>'),('SecureMessages',f'wss://localhost:{secure}/json','hxn.assets.AssetStream<{seq:Int}>'),('Chunks',f'https://localhost:{secure}/chunks','hxn.assets.AssetStream<haxe.io.Bytes>')]
         (work/"RemoteAssets.hx").write_text('@:build(hxn.assets.Assets.build()) class RemoteAssets {'+''.join('@:asset('+literal(uri)+') @:dynamicAsset public static var '+name+':'+type+';' for name,uri,type in fields)+'}')
         try:
-            # The browser flag trusts this temporary TLS fixture only. Native tests trust its CA explicitly.
-            execute([sys.executable,ROOT/"tests/assets/runtimes.py",*options.modes,"--hxn",options.hxn,"--ash",options.ash,*(["--cli",options.cli] if options.cli else []),*(["--chrome",options.chrome] if options.chrome else []),"--main","RemoteCheck","--class-path",work,"--expect","PASS: remote URI","--browser-arg=--ignore-certificate-errors"],timeout=1200)
+            yield work, (plain, secure)
         finally:
             for server in servers:server.shutdown();server.server_close()
             for thread in threads:thread.join(timeout=5)
+
+def main():
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("modes",nargs="+")
+    parser.add_argument("--ash",default="ash")
+    parser.add_argument("--cli",type=Path)
+    parser.add_argument("--hxn",type=Path,default=ROOT.parent/"hxn")
+    parser.add_argument("--chrome")
+    options=parser.parse_args()
+    with fixture() as (work, ports):
+        # This browser trust flag applies only to the temporary fixture CA.
+        execute([sys.executable,ROOT/"tests/assets/runtimes.py",*options.modes,"--hxn",options.hxn,"--ash",options.ash,*(["--cli",options.cli] if options.cli else []),*(["--chrome",options.chrome] if options.chrome else []),"--main","RemoteCheck","--class-path",work,"--expect","PASS: remote URI","--browser-arg=--ignore-certificate-errors"],timeout=1200)
 if __name__=="__main__":main()
