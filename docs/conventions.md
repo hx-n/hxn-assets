@@ -74,7 +74,9 @@ Emscripten threading modes. All use the pinned hxn source/CLI and bounded
 runtime invocations; failed runtime logs are retained as CI artifacts.
 `tests/ci/run.py` runs each runtime's file, asset and remote checks together.
 Native fixture runners set the binding directory on the VM loader search path,
-including `PATH` on Windows, matching `hxn check`. Mobile bundle/APK
+including `PATH` on Windows, matching `hxn check`. Browser profile cleanup is
+best-effort; process exit status and the expected fixture success marker still
+determine the test result. Mobile bundle/APK
 persistence and device lifecycle verification remain separate real-device work.
 
 ## Packaging and commits

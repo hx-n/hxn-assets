@@ -82,7 +82,8 @@ def main():
                     stdout, stderr = destination / "page-stdout.txt", destination / "page-stderr.txt"
                     stdout.unlink(missing_ok=True)
                     stderr.unlink(missing_ok=True)
-                    with tempfile.TemporaryDirectory(prefix="hxn-assets-browser-") as profile:
+                    # Chrome children can finish profile writes after emrun exits.
+                    with tempfile.TemporaryDirectory(prefix="hxn-assets-browser-", ignore_cleanup_errors=True) as profile:
                         run(["emrun", "--browser", options.chrome,
                              "--browser_args=--headless=new --no-first-run --no-default-browser-check --user-data-dir=" + profile + " " + " ".join(options.browser_arg),
                              "--kill_exit", "--timeout", "120", "--timeout-returncode", "1", "--log-stdout", stdout,
