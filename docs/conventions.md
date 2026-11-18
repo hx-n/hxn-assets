@@ -20,6 +20,8 @@ plans, alternatives, measurements and unfinished work in those issues.
   compilation, and mark runtime-only data with `@:dynamicAsset`. Expected types
   select/validate runtime decoding; untyped dynamic data is application-decoded.
   Reserve hand-built catalogs for provider/import boundaries and low-level tests.
+- Canonical filesystem containment uses normalized host separators and directory
+  boundaries. Logical asset keys retain their portable forward-slash syntax.
 - Keep asset identity separate from logical addresses. Verify optional digests
   before caching. Keep providers independent of service or graph implementations.
 - Keep remote values explicitly dynamic. Preserve WS message boundaries and HTTP

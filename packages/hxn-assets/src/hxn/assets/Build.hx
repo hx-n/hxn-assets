@@ -12,14 +12,27 @@ import haxe.macro.Compiler;
 
 /** Catalog/staging implementation shared by compiler integration and the installed CLI. */
 class Build {
+	static function systemPath(path:String):String {
+		return Sys.systemName() == "Windows" ? StringTools.replace(path, "\\", "/") : path;
+	}
+
+	static function canonicalPath(path:String):String {
+		return systemPath(FileSystem.fullPath(path));
+	}
+
+	static function within(root:String, path:String):Bool {
+		final prefix = StringTools.endsWith(root, "/") ? root : root + "/";
+		return path == root || StringTools.startsWith(path, prefix);
+	}
+
 	public static function catalog(directory:String, contentAddressed:Bool = false):Dynamic {
-		final base = FileSystem.fullPath(directory);
+		final base = canonicalPath(directory);
 		if (!FileSystem.isDirectory(base))
 			throw "asset source is not a directory";
 		final assets:Array<Dynamic> = [], names = new Map<String, Bool>();
 		function walk(path:String, relative:String, ancestors:Array<String>):Void {
-			final canonical = FileSystem.fullPath(path);
-			if (canonical != base && !StringTools.startsWith(canonical, base + "/"))
+			final canonical = canonicalPath(path);
+			if (!within(base, canonical))
 				throw "asset symlink escapes its source directory";
 			if (ancestors.indexOf(canonical) >= 0)
 				throw "asset directory cycle";
@@ -28,8 +41,8 @@ class Build {
 			entries.sort(Reflect.compare);
 			for (name in entries) {
 				final source = Path.join([path, name]), key = relative == "" ? name : relative + "/" + name;
-				final resolved = FileSystem.fullPath(source);
-				if (resolved != base && !StringTools.startsWith(resolved, base + "/"))
+				final resolved = canonicalPath(source);
+				if (!within(base, resolved))
 					throw "asset symlink escapes its source directory";
 				if (FileSystem.isDirectory(source))
 					walk(source, key, next);
@@ -57,9 +70,9 @@ class Build {
 	}
 
 	public static function stage(directory:String, output:String, contentAddressed:Bool = false, ?declared:AssetCatalog):Void {
-		final source = FileSystem.exists(directory) ? FileSystem.fullPath(directory) : FileSystem.absolutePath(directory);
-		final destination = FileSystem.absolutePath(output);
-		if (destination == source || StringTools.startsWith(destination, source + "/"))
+		final source = FileSystem.exists(directory) ? canonicalPath(directory) : systemPath(FileSystem.absolutePath(directory));
+		final destination = systemPath(FileSystem.absolutePath(output));
+		if (within(source, destination))
 			throw "asset output must be outside its source directory";
 		final manifest = declared == null ? catalog(source, contentAddressed) : Json.parse(declared.toJson());
 		FileSystem.createDirectory(destination);
@@ -105,11 +118,11 @@ class Build {
 		relativePath(path);
 		if (!FileSystem.exists(directory) || !FileSystem.isDirectory(directory))
 			throw 'asset source directory does not exist: $directory';
-		final root = FileSystem.fullPath(directory), source = Path.join([root, path]);
+		final root = canonicalPath(directory), source = Path.join([root, path]);
 		if (!FileSystem.exists(source) || FileSystem.isDirectory(source))
 			throw 'asset file does not exist: $path';
-		final file = FileSystem.fullPath(source);
-		if (!StringTools.startsWith(file, root + "/"))
+		final file = canonicalPath(source);
+		if (!within(root, file))
 			throw 'asset symlink escapes its source directory: $path';
 		if (FileSystem.stat(file).size > 67108864)
 			throw 'asset exceeds the 64 MiB read limit: $path';

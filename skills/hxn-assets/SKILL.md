@@ -53,7 +53,9 @@ implemented APIs or add graph/service requirements to basic asset loading.
 
 For macro changes run the annotation suite under tests/assets/run.py, including
 compilation-server reuse, asset edits and full DCE. Compare staged descriptors
-with the generated runtime catalog. Asset files are compiler module dependencies;
+with the generated runtime catalog. Normalize host filesystem separators before canonical containment comparisons,
+including Windows compilation and staging. Preserve symlink escape rejection.
+Asset files are compiler module dependencies;
 retain that invalidation when changing macro generation or staging.
 
 Retain the [codec license terms](https://github.com/hx-n/hxn-assets/blob/main/packages/hxn-assets/third-party/NOTICES.md)

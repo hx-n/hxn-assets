@@ -106,11 +106,15 @@ def main():
             assert "Declared.hx:" in failure, failure
         outside = directory / "outside"
         outside.write_text("outside")
-        (source / "escape").symlink_to(outside)
-        declaration('@:asset("escape") public static var A:String;')
-        failure = run([*arguments, "--interp"], success=False)
-        assert "symlink escapes" in failure, failure
-        (source / "escape").unlink()
+        sibling = directory / "source assets sibling"
+        sibling.mkdir()
+        (sibling / "payload").write_text("outside with a shared directory prefix")
+        for target in (outside, sibling / "payload"):
+            (source / "escape").symlink_to(target)
+            declaration('@:asset("escape") public static var A:String;')
+            failure = run([*arguments, "--interp"], success=False)
+            assert "symlink escapes" in failure, failure
+            (source / "escape").unlink()
         print("PASS: compile-time declaration, dependency and path diagnostics", flush=True)
 
         declaration('''@:asset("one", "payload") @:contentAddressed public static var One:haxe.io.Bytes;
