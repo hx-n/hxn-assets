@@ -1,0 +1,88 @@
+{
+  "hxn": 1,
+  "library": "file",
+  "package": "hxn.file",
+  "records": [
+    {
+      "name": "Preference",
+      "docs": "A missing preference is distinct from a stored empty string.",
+      "fields": [
+        { "name": "found", "type": "bool" },
+        { "name": "value", "type": "str" }
+      ]
+    }
+  ],
+  "interfaces": [
+    {
+      "name": "StorageBackend",
+      "docs": "Platform implementation used by hxn.file.Storage.",
+      "shared": true,
+      "methods": [
+        {
+          "name": "new",
+          "kind": "constructor",
+          "params": [{ "name": "application", "type": "str" }, { "name": "assets", "type": "str" }, { "name": "data", "type": "str" }],
+          "returns": "StorageBackend",
+          "fallible": true,
+          "blocking": false
+        },
+        {
+          "name": "read_asset",
+          "kind": "method",
+          "params": [{ "name": "path", "type": "str" }],
+          "returns": "future<bytes>",
+          "fallible": false,
+          "blocking": false
+        },
+        {
+          "name": "read_save",
+          "kind": "method",
+          "params": [{ "name": "path", "type": "str" }],
+          "returns": "future<bytes>",
+          "fallible": false,
+          "blocking": false
+        },
+        {
+          "name": "write_save",
+          "kind": "method",
+          "params": [{ "name": "path", "type": "str" }, { "name": "bytes", "type": "bytes" }],
+          "returns": "future<void>",
+          "fallible": false,
+          "blocking": false
+        },
+        {
+          "name": "delete_save",
+          "kind": "method",
+          "params": [{ "name": "path", "type": "str" }],
+          "returns": "future<bool>",
+          "fallible": false,
+          "blocking": false
+        },
+        {
+          "name": "get_preference",
+          "kind": "method",
+          "params": [{ "name": "key", "type": "str" }],
+          "returns": "future<Preference>",
+          "fallible": false,
+          "blocking": false
+        },
+        {
+          "name": "set_preference",
+          "kind": "method",
+          "params": [{ "name": "key", "type": "str" }, { "name": "value", "type": "str" }],
+          "returns": "future<void>",
+          "fallible": false,
+          "blocking": false
+        },
+        {
+          "name": "delete_preference",
+          "kind": "method",
+          "params": [{ "name": "key", "type": "str" }],
+          "returns": "future<bool>",
+          "fallible": false,
+          "blocking": false
+        }
+      ]
+    }
+  ]
+}

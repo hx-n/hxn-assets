@@ -1,0 +1,709 @@
+{
+  "inputs": [
+    {
+      "path": "Cargo.lock",
+      "sha256": "cb298e3c345d850e91b97b9965a2571ac8abf321099abe739317bc6952f88024"
+    },
+    {
+      "path": "packages/hxn-file/Cargo.toml",
+      "sha256": "69a647ed8dd3ab903693fce876527dc64a73f63b8e7be3b1d5f5bb5269211b3a"
+    }
+  ],
+  "packages": [
+    {
+      "name": "ambient-authority",
+      "version": "0.0.2",
+      "license": "Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT",
+      "repository": "https://github.com/sunfishcode/ambient-authority",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "files": [
+        "licenses/ambient-authority-0.0.2/LICENSE-APACHE",
+        "licenses/ambient-authority-0.0.2/LICENSE-Apache-2.0_WITH_LLVM-exception",
+        "licenses/ambient-authority-0.0.2/COPYRIGHT",
+        "licenses/ambient-authority-0.0.2/LICENSE-MIT"
+      ]
+    },
+    {
+      "name": "bitflags",
+      "version": "2.13.2",
+      "license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/bitflags/bitflags",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "files": [
+        "licenses/bitflags-2.13.2/LICENSE-APACHE",
+        "licenses/bitflags-2.13.2/LICENSE-MIT"
+      ]
+    },
+    {
+      "name": "cap-primitives",
+      "version": "4.0.3",
+      "license": "Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT",
+      "repository": "https://github.com/bytecodealliance/cap-std",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "files": [
+        "licenses/cap-primitives-4.0.3/LICENSE-APACHE",
+        "licenses/cap-primitives-4.0.3/LICENSE-Apache-2.0_WITH_LLVM-exception",
+        "licenses/cap-primitives-4.0.3/COPYRIGHT",
+        "licenses/cap-primitives-4.0.3/LICENSE-MIT"
+      ]
+    },
+    {
+      "name": "cap-std",
+      "version": "4.0.3",
+      "license": "Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT",
+      "repository": "https://github.com/bytecodealliance/cap-std",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "files": [
+        "licenses/cap-std-4.0.3/LICENSE-APACHE",
+        "licenses/cap-std-4.0.3/LICENSE-Apache-2.0_WITH_LLVM-exception",
+        "licenses/cap-std-4.0.3/COPYRIGHT",
+        "licenses/cap-std-4.0.3/LICENSE-MIT"
+      ]
+    },
+    {
+      "name": "cc",
+      "version": "1.11.2",
+      "license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/rust-lang/cc-rs",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "files": [
+        "licenses/cc-1.11.2/LICENSE-APACHE",
+        "licenses/cc-1.11.2/LICENSE-MIT"
+      ]
+    },
+    {
+      "name": "errno",
+      "version": "0.3.15",
+      "license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/lambda-fairy/rust-errno",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "files": [
+        "licenses/errno-0.3.15/LICENSE-APACHE",
+        "licenses/errno-0.3.15/LICENSE-MIT"
+      ]
+    },
+    {
+      "name": "find-msvc-tools",
+      "version": "0.1.15",
+      "license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/rust-lang/cc-rs",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "files": [
+        "licenses/find-msvc-tools-0.1.15/LICENSE-APACHE",
+        "licenses/find-msvc-tools-0.1.15/LICENSE-MIT"
+      ]
+    },
+    {
+      "name": "fs-set-times",
+      "version": "0.20.3",
+      "license": "Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT",
+      "repository": "https://github.com/bytecodealliance/fs-set-times",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "files": [
+        "licenses/fs-set-times-0.20.3/LICENSE-APACHE",
+        "licenses/fs-set-times-0.20.3/LICENSE-Apache-2.0_WITH_LLVM-exception",
+        "licenses/fs-set-times-0.20.3/COPYRIGHT",
+        "licenses/fs-set-times-0.20.3/LICENSE-MIT"
+      ]
+    },
+    {
+      "name": "hl_abi",
+      "version": "0.1.0",
+      "license": "MIT",
+      "repository": null,
+      "source": "git+https://github.com/rayzor-blade/hl_abi#f38e06df4c7f7d7e79348df345c71ea70770a82d",
+      "files": [
+        "licenses/hl_abi-0.1.0/LICENSE-MIT",
+        "licenses/hl_abi-0.1.0/UPSTREAM-MANIFEST.txt"
+      ]
+    },
+    {
+      "name": "hxn",
+      "version": "0.3.8",
+      "license": "Apache-2.0",
+      "repository": "https://github.com/hx-n/hxn",
+      "source": "git+https://github.com/hx-n/hxn.git?tag=v0.3.8#763216a473053ecdf57ecef287b6cb8cfdd661a9",
+      "files": [
+        "licenses/hxn-0.3.8/LICENSE"
+      ]
+    },
+    {
+      "name": "hxn-abi",
+      "version": "0.3.8",
+      "license": "Apache-2.0",
+      "repository": "https://github.com/hx-n/hxn",
+      "source": "git+https://github.com/hx-n/hxn.git?tag=v0.3.8#763216a473053ecdf57ecef287b6cb8cfdd661a9",
+      "files": [
+        "licenses/hxn-abi-0.3.8/LICENSE"
+      ]
+    },
+    {
+      "name": "hxn-future",
+      "version": "0.3.8",
+      "license": "Apache-2.0",
+      "repository": "https://github.com/hx-n/hxn",
+      "source": "git+https://github.com/hx-n/hxn.git?tag=v0.3.8#763216a473053ecdf57ecef287b6cb8cfdd661a9",
+      "files": [
+        "licenses/hxn-future-0.3.8/LICENSE"
+      ]
+    },
+    {
+      "name": "hxn-macros",
+      "version": "0.3.8",
+      "license": "Apache-2.0",
+      "repository": "https://github.com/hx-n/hxn",
+      "source": "git+https://github.com/hx-n/hxn.git?tag=v0.3.8#763216a473053ecdf57ecef287b6cb8cfdd661a9",
+      "files": [
+        "licenses/hxn-macros-0.3.8/LICENSE"
+      ]
+    },
+    {
+      "name": "io-extras",
+      "version": "0.19.0",
+      "license": "Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT",
+      "repository": "https://github.com/sunfishcode/io-extras",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "files": [
+        "licenses/io-extras-0.19.0/LICENSE-APACHE",
+        "licenses/io-extras-0.19.0/LICENSE-Apache-2.0_WITH_LLVM-exception",
+        "licenses/io-extras-0.19.0/COPYRIGHT",
+        "licenses/io-extras-0.19.0/LICENSE-MIT"
+      ]
+    },
+    {
+      "name": "io-lifetimes",
+      "version": "2.0.4",
+      "license": "Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT",
+      "repository": "https://github.com/sunfishcode/io-lifetimes",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "files": [
+        "licenses/io-lifetimes-2.0.4/LICENSE-APACHE",
+        "licenses/io-lifetimes-2.0.4/LICENSE-Apache-2.0_WITH_LLVM-exception",
+        "licenses/io-lifetimes-2.0.4/COPYRIGHT",
+        "licenses/io-lifetimes-2.0.4/LICENSE-MIT"
+      ]
+    },
+    {
+      "name": "io-lifetimes",
+      "version": "3.0.1",
+      "license": "Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT",
+      "repository": "https://github.com/sunfishcode/io-lifetimes",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "files": [
+        "licenses/io-lifetimes-3.0.1/LICENSE-APACHE",
+        "licenses/io-lifetimes-3.0.1/LICENSE-Apache-2.0_WITH_LLVM-exception",
+        "licenses/io-lifetimes-3.0.1/COPYRIGHT",
+        "licenses/io-lifetimes-3.0.1/LICENSE-MIT"
+      ]
+    },
+    {
+      "name": "ipnet",
+      "version": "2.12.2",
+      "license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/krisprice/ipnet",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "files": [
+        "licenses/ipnet-2.12.2/LICENSE-APACHE",
+        "licenses/ipnet-2.12.2/LICENSE-MIT"
+      ]
+    },
+    {
+      "name": "itoa",
+      "version": "1.0.19",
+      "license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/dtolnay/itoa",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "files": [
+        "licenses/itoa-1.0.19/LICENSE-APACHE",
+        "licenses/itoa-1.0.19/LICENSE-MIT"
+      ]
+    },
+    {
+      "name": "krio-core",
+      "version": "0.1.0",
+      "license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/darmie/krio",
+      "source": "git+https://github.com/darmie/krio?rev=ecf740f8de98965d3c0f238b4d22636318821836#ecf740f8de98965d3c0f238b4d22636318821836",
+      "files": [
+        "licenses/krio-core-0.1.0/LICENSE"
+      ]
+    },
+    {
+      "name": "krio-parallel",
+      "version": "0.1.0",
+      "license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/darmie/krio",
+      "source": "git+https://github.com/darmie/krio?rev=ecf740f8de98965d3c0f238b4d22636318821836#ecf740f8de98965d3c0f238b4d22636318821836",
+      "files": [
+        "licenses/krio-parallel-0.1.0/LICENSE"
+      ]
+    },
+    {
+      "name": "krio-runtime",
+      "version": "0.1.0",
+      "license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/darmie/krio",
+      "source": "git+https://github.com/darmie/krio?rev=ecf740f8de98965d3c0f238b4d22636318821836#ecf740f8de98965d3c0f238b4d22636318821836",
+      "files": [
+        "licenses/krio-runtime-0.1.0/LICENSE"
+      ]
+    },
+    {
+      "name": "libc",
+      "version": "0.2.191",
+      "license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/rust-lang/libc",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "files": [
+        "licenses/libc-0.2.191/LICENSE-APACHE",
+        "licenses/libc-0.2.191/LICENSE-MIT"
+      ]
+    },
+    {
+      "name": "linux-raw-sys",
+      "version": "0.12.1",
+      "license": "Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT",
+      "repository": "https://github.com/sunfishcode/linux-raw-sys",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "files": [
+        "licenses/linux-raw-sys-0.12.1/LICENSE-APACHE",
+        "licenses/linux-raw-sys-0.12.1/LICENSE-Apache-2.0_WITH_LLVM-exception",
+        "licenses/linux-raw-sys-0.12.1/COPYRIGHT",
+        "licenses/linux-raw-sys-0.12.1/LICENSE-MIT"
+      ]
+    },
+    {
+      "name": "maybe-owned",
+      "version": "0.3.4",
+      "license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/rustonaut/maybe-owned",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "files": [
+        "licenses/maybe-owned-0.3.4/LICENSE-APACHE",
+        "licenses/maybe-owned-0.3.4/LICENSE-MIT"
+      ]
+    },
+    {
+      "name": "memchr",
+      "version": "2.8.3",
+      "license": "Unlicense OR MIT",
+      "repository": "https://github.com/BurntSushi/memchr",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "files": [
+        "licenses/memchr-2.8.3/COPYING",
+        "licenses/memchr-2.8.3/LICENSE-MIT"
+      ]
+    },
+    {
+      "name": "ndk-context",
+      "version": "0.1.1",
+      "license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/rust-windowing/android-ndk-rs",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "files": [
+        "licenses/ndk-context-0.1.1/LICENSE-APACHE",
+        "licenses/ndk-context-0.1.1/LICENSE-MIT"
+      ]
+    },
+    {
+      "name": "once_cell",
+      "version": "1.21.4",
+      "license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/matklad/once_cell",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "files": [
+        "licenses/once_cell-1.21.4/LICENSE-APACHE",
+        "licenses/once_cell-1.21.4/LICENSE-MIT"
+      ]
+    },
+    {
+      "name": "proc-macro2",
+      "version": "1.0.107",
+      "license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/dtolnay/proc-macro2",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "files": [
+        "licenses/proc-macro2-1.0.107/LICENSE-APACHE",
+        "licenses/proc-macro2-1.0.107/LICENSE-MIT"
+      ]
+    },
+    {
+      "name": "quote",
+      "version": "1.0.47",
+      "license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/dtolnay/quote",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "files": [
+        "licenses/quote-1.0.47/LICENSE-APACHE",
+        "licenses/quote-1.0.47/LICENSE-MIT"
+      ]
+    },
+    {
+      "name": "rustix",
+      "version": "1.1.6",
+      "license": "Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT",
+      "repository": "https://github.com/bytecodealliance/rustix",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "files": [
+        "licenses/rustix-1.1.6/LICENSE-APACHE",
+        "licenses/rustix-1.1.6/LICENSE-Apache-2.0_WITH_LLVM-exception",
+        "licenses/rustix-1.1.6/COPYRIGHT",
+        "licenses/rustix-1.1.6/LICENSE-MIT"
+      ]
+    },
+    {
+      "name": "rustix-linux-procfs",
+      "version": "0.1.1",
+      "license": "Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT",
+      "repository": "https://github.com/sunfishcode/rustix-linux-procfs",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "files": [
+        "licenses/rustix-linux-procfs-0.1.1/LICENSE-APACHE",
+        "licenses/rustix-linux-procfs-0.1.1/LICENSE-Apache-2.0_WITH_LLVM-exception",
+        "licenses/rustix-linux-procfs-0.1.1/COPYRIGHT",
+        "licenses/rustix-linux-procfs-0.1.1/LICENSE-MIT"
+      ]
+    },
+    {
+      "name": "serde",
+      "version": "1.0.229",
+      "license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/serde-rs/serde",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "files": [
+        "licenses/serde-1.0.229/LICENSE-APACHE",
+        "licenses/serde-1.0.229/LICENSE-MIT"
+      ]
+    },
+    {
+      "name": "serde_core",
+      "version": "1.0.229",
+      "license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/serde-rs/serde",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "files": [
+        "licenses/serde_core-1.0.229/LICENSE-APACHE",
+        "licenses/serde_core-1.0.229/LICENSE-MIT"
+      ]
+    },
+    {
+      "name": "serde_derive",
+      "version": "1.0.229",
+      "license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/serde-rs/serde",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "files": [
+        "licenses/serde_derive-1.0.229/LICENSE-APACHE",
+        "licenses/serde_derive-1.0.229/LICENSE-MIT"
+      ]
+    },
+    {
+      "name": "serde_json",
+      "version": "1.0.154",
+      "license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/serde-rs/json",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "files": [
+        "licenses/serde_json-1.0.154/LICENSE-APACHE",
+        "licenses/serde_json-1.0.154/LICENSE-MIT"
+      ]
+    },
+    {
+      "name": "shlex",
+      "version": "2.0.1",
+      "license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/comex/rust-shlex",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "files": [
+        "licenses/shlex-2.0.1/LICENSE-APACHE",
+        "licenses/shlex-2.0.1/LICENSE-MIT"
+      ]
+    },
+    {
+      "name": "syn",
+      "version": "3.0.10",
+      "license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/dtolnay/syn",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "files": [
+        "licenses/syn-3.0.10/LICENSE-APACHE",
+        "licenses/syn-3.0.10/LICENSE-MIT"
+      ]
+    },
+    {
+      "name": "unicode-ident",
+      "version": "1.0.27",
+      "license": "(MIT OR Apache-2.0) AND Unicode-3.0",
+      "repository": "https://github.com/dtolnay/unicode-ident",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "files": [
+        "licenses/unicode-ident-1.0.27/LICENSE-UNICODE",
+        "licenses/unicode-ident-1.0.27/LICENSE-APACHE",
+        "licenses/unicode-ident-1.0.27/LICENSE-MIT"
+      ]
+    },
+    {
+      "name": "windows-link",
+      "version": "0.2.1",
+      "license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/microsoft/windows-rs",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "files": [
+        "licenses/windows-link-0.2.1/license-apache-2.0",
+        "licenses/windows-link-0.2.1/license-mit"
+      ]
+    },
+    {
+      "name": "windows-sys",
+      "version": "0.59.0",
+      "license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/microsoft/windows-rs",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "files": [
+        "licenses/windows-sys-0.59.0/license-apache-2.0",
+        "licenses/windows-sys-0.59.0/license-mit"
+      ]
+    },
+    {
+      "name": "windows-sys",
+      "version": "0.60.2",
+      "license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/microsoft/windows-rs",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "files": [
+        "licenses/windows-sys-0.60.2/license-apache-2.0",
+        "licenses/windows-sys-0.60.2/license-mit"
+      ]
+    },
+    {
+      "name": "windows-sys",
+      "version": "0.61.2",
+      "license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/microsoft/windows-rs",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "files": [
+        "licenses/windows-sys-0.61.2/license-apache-2.0",
+        "licenses/windows-sys-0.61.2/license-mit"
+      ]
+    },
+    {
+      "name": "windows-targets",
+      "version": "0.52.6",
+      "license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/microsoft/windows-rs",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "files": [
+        "licenses/windows-targets-0.52.6/license-apache-2.0",
+        "licenses/windows-targets-0.52.6/license-mit"
+      ]
+    },
+    {
+      "name": "windows-targets",
+      "version": "0.53.5",
+      "license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/microsoft/windows-rs",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "files": [
+        "licenses/windows-targets-0.53.5/license-apache-2.0",
+        "licenses/windows-targets-0.53.5/license-mit"
+      ]
+    },
+    {
+      "name": "windows_aarch64_gnullvm",
+      "version": "0.52.6",
+      "license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/microsoft/windows-rs",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "files": [
+        "licenses/windows_aarch64_gnullvm-0.52.6/license-apache-2.0",
+        "licenses/windows_aarch64_gnullvm-0.52.6/license-mit"
+      ]
+    },
+    {
+      "name": "windows_aarch64_gnullvm",
+      "version": "0.53.1",
+      "license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/microsoft/windows-rs",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "files": [
+        "licenses/windows_aarch64_gnullvm-0.53.1/license-apache-2.0",
+        "licenses/windows_aarch64_gnullvm-0.53.1/license-mit"
+      ]
+    },
+    {
+      "name": "windows_aarch64_msvc",
+      "version": "0.52.6",
+      "license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/microsoft/windows-rs",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "files": [
+        "licenses/windows_aarch64_msvc-0.52.6/license-apache-2.0",
+        "licenses/windows_aarch64_msvc-0.52.6/license-mit"
+      ]
+    },
+    {
+      "name": "windows_aarch64_msvc",
+      "version": "0.53.1",
+      "license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/microsoft/windows-rs",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "files": [
+        "licenses/windows_aarch64_msvc-0.53.1/license-apache-2.0",
+        "licenses/windows_aarch64_msvc-0.53.1/license-mit"
+      ]
+    },
+    {
+      "name": "windows_i686_gnu",
+      "version": "0.52.6",
+      "license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/microsoft/windows-rs",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "files": [
+        "licenses/windows_i686_gnu-0.52.6/license-apache-2.0",
+        "licenses/windows_i686_gnu-0.52.6/license-mit"
+      ]
+    },
+    {
+      "name": "windows_i686_gnu",
+      "version": "0.53.1",
+      "license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/microsoft/windows-rs",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "files": [
+        "licenses/windows_i686_gnu-0.53.1/license-apache-2.0",
+        "licenses/windows_i686_gnu-0.53.1/license-mit"
+      ]
+    },
+    {
+      "name": "windows_i686_gnullvm",
+      "version": "0.52.6",
+      "license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/microsoft/windows-rs",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "files": [
+        "licenses/windows_i686_gnullvm-0.52.6/license-apache-2.0",
+        "licenses/windows_i686_gnullvm-0.52.6/license-mit"
+      ]
+    },
+    {
+      "name": "windows_i686_gnullvm",
+      "version": "0.53.1",
+      "license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/microsoft/windows-rs",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "files": [
+        "licenses/windows_i686_gnullvm-0.53.1/license-apache-2.0",
+        "licenses/windows_i686_gnullvm-0.53.1/license-mit"
+      ]
+    },
+    {
+      "name": "windows_i686_msvc",
+      "version": "0.52.6",
+      "license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/microsoft/windows-rs",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "files": [
+        "licenses/windows_i686_msvc-0.52.6/license-apache-2.0",
+        "licenses/windows_i686_msvc-0.52.6/license-mit"
+      ]
+    },
+    {
+      "name": "windows_i686_msvc",
+      "version": "0.53.1",
+      "license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/microsoft/windows-rs",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "files": [
+        "licenses/windows_i686_msvc-0.53.1/license-apache-2.0",
+        "licenses/windows_i686_msvc-0.53.1/license-mit"
+      ]
+    },
+    {
+      "name": "windows_x86_64_gnu",
+      "version": "0.52.6",
+      "license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/microsoft/windows-rs",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "files": [
+        "licenses/windows_x86_64_gnu-0.52.6/license-apache-2.0",
+        "licenses/windows_x86_64_gnu-0.52.6/license-mit"
+      ]
+    },
+    {
+      "name": "windows_x86_64_gnu",
+      "version": "0.53.1",
+      "license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/microsoft/windows-rs",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "files": [
+        "licenses/windows_x86_64_gnu-0.53.1/license-apache-2.0",
+        "licenses/windows_x86_64_gnu-0.53.1/license-mit"
+      ]
+    },
+    {
+      "name": "windows_x86_64_gnullvm",
+      "version": "0.52.6",
+      "license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/microsoft/windows-rs",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "files": [
+        "licenses/windows_x86_64_gnullvm-0.52.6/license-apache-2.0",
+        "licenses/windows_x86_64_gnullvm-0.52.6/license-mit"
+      ]
+    },
+    {
+      "name": "windows_x86_64_gnullvm",
+      "version": "0.53.1",
+      "license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/microsoft/windows-rs",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "files": [
+        "licenses/windows_x86_64_gnullvm-0.53.1/license-apache-2.0",
+        "licenses/windows_x86_64_gnullvm-0.53.1/license-mit"
+      ]
+    },
+    {
+      "name": "windows_x86_64_msvc",
+      "version": "0.52.6",
+      "license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/microsoft/windows-rs",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "files": [
+        "licenses/windows_x86_64_msvc-0.52.6/license-apache-2.0",
+        "licenses/windows_x86_64_msvc-0.52.6/license-mit"
+      ]
+    },
+    {
+      "name": "windows_x86_64_msvc",
+      "version": "0.53.1",
+      "license": "MIT OR Apache-2.0",
+      "repository": "https://github.com/microsoft/windows-rs",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "files": [
+        "licenses/windows_x86_64_msvc-0.53.1/license-apache-2.0",
+        "licenses/windows_x86_64_msvc-0.53.1/license-mit"
+      ]
+    },
+    {
+      "name": "winx",
+      "version": "0.36.4",
+      "license": "Apache-2.0 WITH LLVM-exception",
+      "repository": "https://github.com/sunfishcode/winx",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "files": [
+        "licenses/winx-0.36.4/LICENSE"
+      ]
+    },
+    {
+      "name": "zmij",
+      "version": "1.0.23",
+      "license": "MIT",
+      "repository": "https://github.com/dtolnay/zmij",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "files": [
+        "licenses/zmij-1.0.23/LICENSE-MIT",
+        "licenses/zmij-1.0.23/UPSTREAM-MANIFEST.txt"
+      ]
+    }
+  ]
+}

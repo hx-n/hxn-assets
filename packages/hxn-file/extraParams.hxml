@@ -1,0 +1,2 @@
+--macro hxn.Bind.lib("file")
+--macro hxn.file.Init.register()

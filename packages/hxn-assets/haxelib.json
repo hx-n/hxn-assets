@@ -1,0 +1,30 @@
+{
+  "name": "hxn-assets",
+  "version": "0.1.0",
+  "license": "Apache",
+  "url": "https://github.com/hx-n/hxn-assets",
+  "description": "Asset catalogs and asynchronous loading over hxn-file",
+  "contributors": [
+    "darmie"
+  ],
+  "releasenote": "Asset catalogs and asynchronous loading over portable file storage.",
+  "classPath": "src",
+  "dependencies": {
+    "hxn": "0.3.8",
+    "hxn-file": "0.1.0"
+  },
+  "hxn": {
+    "cli": {
+      "version": 1,
+      "namespace": "assets",
+      "command": [
+        "haxe",
+        "-cp",
+        "{root}/src",
+        "--run",
+        "hxn.assets.cli.Tool"
+      ],
+      "hooks": []
+    }
+  }
+}

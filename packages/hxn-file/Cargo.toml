@@ -1,0 +1,34 @@
+[package]
+name = "hxn-file"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Asynchronous bundled files, application saves and preferences for Haxe"
+
+[lib]
+name = "hxn_file"
+
+[package.metadata.hxn]
+library = "file"
+haxelib = "hxn-file"
+contributors = ["darmie"]
+releasenote = "Asynchronous bundled files, saves and preferences across native, mobile and browser runtimes."
+haxe = "../../tests/check"
+init = ["hxn.file.Init.register()"]
+haxe-flags = ["-D", "hxn_assets_dir=../../tests/fixtures/assets"]
+
+[dependencies]
+hxn.workspace = true
+hxn-future.workspace = true
+serde_json.workspace = true
+serde = { version = "1", features = ["derive"] }
+
+[target.'cfg(not(target_family = "wasm"))'.dependencies]
+cap-std = "4.0.3"
+
+[target.'cfg(target_os = "android")'.dependencies]
+ndk-context = "0.1.1"
+
+[build-dependencies]
+cc = "1"

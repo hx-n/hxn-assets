@@ -1,0 +1,10 @@
+{
+  "name": "hxn-file",
+  "version": "0.1.0",
+  "description": "Asynchronous bundled files, application saves and preferences for Haxe",
+  "url": "https://github.com/hx-n/hxn-assets",
+  "license": "Apache",
+  "contributors": ["darmie"],
+  "releasenote": "Asynchronous bundled files, saves and preferences across native, mobile and browser runtimes.",
+  "dependencies": { "hxn": "0.3.8" }
+}
