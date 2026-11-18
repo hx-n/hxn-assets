@@ -27,26 +27,32 @@ def main():
 
     if options.mode == "native":
         modes = ["ash", "ash-jit", "ash-interp", "cpp", "cppia"]
-        checks = [("hl", options.ash), ("hl", options.ash + " --mode jit"),
-                  ("hl", options.ash + " --mode interp"), ("cpp", None), ("cppia", None)]
         if sys.platform != "darwin":
             modes.insert(0, "hl")
-            checks.insert(0, ("hl", None))
-        for runtime, vm in checks:
-            run([options.cli, "check", runtime, *(["--vm", vm] if vm else [])], ROOT / "packages/hxn-file")
     else:
         modes = [options.mode]
-        target = "hl" if options.mode == "wasm" else "cpp"
-        flags = ["--wasm", "--browser"]
-        if options.mode in ("wasm", "emcc-threads"):
-            flags.append("--threads")
-        if target == "hl":
-            flags += ["--vm", options.ash]
-        run([options.cli, "check", target, *flags], ROOT / "packages/hxn-file")
     common = ["--hxn", options.hxn.resolve(), "--cli", options.cli, "--ash", options.ash,
               "--chrome", options.chrome]
-    run([sys.executable, ROOT / "tests/assets/runtimes.py", *modes, *common])
-    run([sys.executable, ROOT / "tests/assets/remote.py", *modes, *common])
+    for mode in modes:
+        if options.mode == "native":
+            runtime = mode if mode in ("cpp", "cppia") else "hl"
+            vm = {
+                "ash": options.ash,
+                "ash-jit": options.ash + " --mode jit",
+                "ash-interp": options.ash + " --mode interp",
+            }.get(mode)
+            flags = ["--vm", vm] if vm else []
+        else:
+            runtime = "hl" if mode == "wasm" else "cpp"
+            flags = ["--wasm", "--browser"]
+            if mode in ("wasm", "emcc-threads"):
+                flags.append("--threads")
+            if runtime == "hl":
+                flags += ["--vm", options.ash]
+        run([options.cli, "check", runtime, *flags], ROOT / "packages/hxn-file")
+        run([sys.executable, ROOT / "tests/assets/runtimes.py", mode, *common])
+        run([sys.executable, ROOT / "tests/assets/remote.py", mode, *common])
+
 
 
 if __name__ == "__main__":

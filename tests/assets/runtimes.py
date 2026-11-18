@@ -36,7 +36,10 @@ def main():
             def run(argv, cwd=ROOT, timeout=600):
                 environment = os.environ.copy()
                 if mode == "hl":
-                    for variable in ("LD_LIBRARY_PATH", "DYLD_LIBRARY_PATH"):
+                    variables = ["LD_LIBRARY_PATH", "DYLD_LIBRARY_PATH"]
+                    if os.name == "nt":
+                        variables.append("PATH")
+                    for variable in variables:
                         environment[variable] = str(destination) + os.pathsep + environment.get(variable, "")
                 if mode in ("emcc", "emcc-threads") and str(argv[0]) == "haxe":
                     environment.pop("CC", None)

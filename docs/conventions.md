@@ -72,7 +72,9 @@ HashLink on Linux/Windows, all three Ash modes, hxcpp and CPPIA on Linux,
 macOS and Windows. Browser runs real Chrome pages with Ash wasm and both
 Emscripten threading modes. All use the pinned hxn source/CLI and bounded
 runtime invocations; failed runtime logs are retained as CI artifacts.
-`tests/ci/run.py` coordinates these repository tests. Mobile bundle/APK
+`tests/ci/run.py` runs each runtime's file, asset and remote checks together.
+Native fixture runners set the binding directory on the VM loader search path,
+including `PATH` on Windows, matching `hxn check`. Mobile bundle/APK
 persistence and device lifecycle verification remain separate real-device work.
 
 ## Packaging and commits
