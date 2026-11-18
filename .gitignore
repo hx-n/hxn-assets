@@ -2,3 +2,5 @@
 /packages/hxn-file/native
 /packages/hxn-file/.cargo/config.toml
 /node_modules
+__pycache__/
+*.pyc

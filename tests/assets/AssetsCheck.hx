@@ -58,13 +58,20 @@ class AssetsCheck {
 		fails(() -> loader.load("root").await());
 		final payload = Bytes.ofString("same");
 		final cid = "sha256:" + Sha256.make(payload).toHex();
-		final addressed = new AssetCatalog([
-			{address: "one", path: "same", contentId: cid},
-			{address: "two", path: "second", contentId: cid}
-		]);
+		final addressed = AnnotatedAssets.catalog();
+		check(AnnotatedAssets.addresses.One == "one" && AnnotatedAssets.addresses.Two == "two", "generated address constants");
+		check(addressed.get(AnnotatedAssets.addresses.One).contentId == cid
+			&& addressed.get(AnnotatedAssets.addresses.Two).contentId == cid,
+			"compile-time content identity");
+		check(PlainAssets.catalog().get(PlainAssets.addresses.Hello).contentId == null, "hashing must be opt-in");
+		final grouped = GroupedAssets.catalog();
+		check(grouped.order(GroupedAssets.addresses.Hello)[0].address == GroupedAssets.addresses.Base, "annotated dependencies");
+		check(grouped.get(GroupedAssets.addresses.Hello).contentId != null, "class content identity opt-in");
+		check(grouped.group("world").length == 1 && grouped.labels(["visible", "shared"]).length == 1, "annotated group and labels");
+		check(grouped.get(GroupedAssets.addresses.Hello).mediaType == "text/plain", "annotated media type");
 		final delayed = new DelayedSource();
 		final shared = new AssetLoader(delayed, addressed);
-		final first = shared.load("one"), second = shared.load("two");
+		final first = shared.load(AnnotatedAssets.addresses.One), second = shared.load(AnnotatedAssets.addresses.Two);
 		check(delayed.calls == 1, "in-flight content deduplication");
 		delayed.complete(0, payload);
 		check(first.await().toString() == "same" && second.await().toString() == "same", "shared payload");

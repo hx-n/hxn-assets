@@ -1,33 +1,53 @@
 # hxn-assets
 
-Asset catalogs and asynchronous byte loading over a pluggable `AssetSource`.
-Catalogs validate addresses and dependencies; the loader orders dependencies,
-verifies optional SHA-256 content IDs and caches bytes within a configurable budget.
+Declare assets in Haxe metadata and read them as their actual data types.
+JSON can be `Dynamic` or a typed structure, text is `String`, binary is `Bytes`,
+and PNG images are portable `ImageData` pixels.
 
 ```haxe
-final catalog = new hxn.assets.AssetCatalog([
-    {address: "start", path: "levels/start.json"}
-]);
-final files = new hxn.file.Storage("com.example.game");
-final loader = new hxn.assets.AssetLoader(new hxn.assets.FileSource(files), catalog);
-loader.load("start").then(bytes -> loadLevel(bytes));
+typedef LevelData = {name:String, lives:Int};
+
+@:build(hxn.assets.Assets.build())
+class GameAssets {
+    @:asset("levels/start.json")
+    @:contentAddressed
+    public static var Start:LevelData;
+
+    @:asset("live/level.json")
+    @:dynamicAsset
+    public static var Live:LevelData;
+
+    @:asset("wss://assets.example/world")
+    @:dynamicAsset
+    public static var Events:hxn.assets.AssetStream<{entity:String, x:Float, y:Float}>;
+}
+
+trace(GameAssets.Start.name); // decoded data embedded at compilation
 ```
 
-`unload(address)` invalidates a cached payload. `clear()` empties the cache;
-`close()` also rejects new loads. Returned bytes are independent copies.
-`FileSource` borrows its storage, so close the storage separately.
+Mark runtime data with `@:dynamicAsset`. `GameAssets.load(loader)` asynchronously
+loads and decodes those fields through an `AssetLoader`; read them after it
+completes. A declared payload type selects the decoder and validates the value.
+An untyped dynamic field receives raw bytes for application decoding.
+`@:assetDecode(MyCodec.decode)` supplies a custom `Bytes -> T` decoder.
 
-The installed haxelib registers these hxn CLI commands:
+RemoteSource supports HTTP(S) values and byte-chunk streams, and WS(S) message
+streams. `AssetStream<T>.next()` returns a future of `{done, value, text}`;
+`listen` consumes messages and `close` cancels the connection. Use a
+`RemoteSource` with a borrowed FileSource fallback when a catalog mixes local
+and remote keys. The stream's payload type selects per-message decoding.
+
+The macro generates the catalog and optional SHA-256 IDs. Provider-based loading
+uses `GameAssets.catalog()` and `GameAssets.addresses.Start`. `FileSource` borrows
+an hxn-file Storage; custom sources return `hxn.Future<Bytes>`.
+
+The installed haxelib also supplies whole-directory imports:
 
 ```text
 hxn assets catalog --source assets --out catalog.json --content-addressed
 hxn assets stage --source assets --out build/assets --content-addressed
 ```
 
-Omit `--content-addressed` to avoid hashing. Compiler integration stages `assets/`
-automatically; `-D hxn_assets_content_addressed` includes SHA-256 IDs in its catalog.
-Custom providers implement `AssetSource.read` or `CatalogSource.load`, returning
-`hxn.Future`. The package has no graph or hosted-service dependency.
-
-See [design](https://github.com/hx-n/hxn-assets/blob/main/docs/design.md) and
-[conventions](https://github.com/hx-n/hxn-assets/blob/main/docs/conventions.md).
+See [types, metadata and lifecycle](https://github.com/hx-n/hxn-assets/blob/main/docs/design.md#asset-declarations),
+[conventions](https://github.com/hx-n/hxn-assets/blob/main/docs/conventions.md) and
+[codec notices](https://github.com/hx-n/hxn-assets/blob/main/packages/hxn-assets/third-party/NOTICES.md).

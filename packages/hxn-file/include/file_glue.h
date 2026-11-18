@@ -117,6 +117,65 @@ inline void storage_backend_weak_close(void *self) {
 	hxn::check(hxn_file_storage_backend_weak_close((hxn_handle *)self, &err), err);
 }
 
+inline void *remote_backend_new(::String uri, ::String options) {
+	hx::strbuf uri_storage;
+	hx::strbuf options_storage;
+	hxn_handle *out = 0;
+	hxn_buf err = HXN_BUF_EMPTY;
+	hxn::check(hxn_file_remote_backend_new(hxn::slice(uri, uri_storage), hxn::slice(options, options_storage), &out, &err), err);
+	return out;
+}
+
+inline void *remote_backend_read(void *self) {
+	hxn_handle *out = 0;
+	hxn_buf err = HXN_BUF_EMPTY;
+	hxn::check(hxn_file_remote_backend_read((hxn_handle *)self, &out, &err), err);
+	return out;
+}
+
+inline void *remote_backend_next(void *self) {
+	hxn_handle *out = 0;
+	hxn_buf err = HXN_BUF_EMPTY;
+	hxn::check(hxn_file_remote_backend_next((hxn_handle *)self, &out, &err), err);
+	return out;
+}
+
+inline void remote_backend_cancel(void *self) {
+	hxn_buf err = HXN_BUF_EMPTY;
+	hxn::check(hxn_file_remote_backend_cancel((hxn_handle *)self, &err), err);
+}
+
+inline void remote_backend_drop(void *self) {
+	hxn_buf err = HXN_BUF_EMPTY;
+	hxn::check(hxn_file_remote_backend_drop((hxn_handle *)self, &err), err);
+}
+
+inline bool remote_backend_same(void *self, void *other) {
+	int out = 0;
+	hxn_buf err = HXN_BUF_EMPTY;
+	hxn::check(hxn_file_remote_backend_same((hxn_handle *)self, (hxn_handle *)other, &out, &err), err);
+	return out != 0;
+}
+
+inline void *remote_backend_weak(void *self) {
+	hxn_handle *out = 0;
+	hxn_buf err = HXN_BUF_EMPTY;
+	hxn::check(hxn_file_remote_backend_weak((hxn_handle *)self, &out, &err), err);
+	return out;
+}
+
+inline void *remote_backend_weak_upgrade(void *self) {
+	hxn_handle *out = 0;
+	hxn_buf err = HXN_BUF_EMPTY;
+	hxn::check(hxn_file_remote_backend_weak_upgrade((hxn_handle *)self, &out, &err), err);
+	return out;
+}
+
+inline void remote_backend_weak_close(void *self) {
+	hxn_buf err = HXN_BUF_EMPTY;
+	hxn::check(hxn_file_remote_backend_weak_close((hxn_handle *)self, &err), err);
+}
+
 inline bool outbox_wait(int milliseconds) {
 	// The collector may run while this thread waits.
 	hxn::Blocking zone;
@@ -178,6 +237,13 @@ inline Array<unsigned char> future_take_preference(void *self) {
 	hxn_buf out = HXN_BUF_EMPTY;
 	hxn_buf err = HXN_BUF_EMPTY;
 	hxn::check(hxn_file_future_take_preference((hxn_handle *)self, &out, &err), err);
+	return hxn::take_bytes(out);
+}
+
+inline Array<unsigned char> future_take_remote_frame(void *self) {
+	hxn_buf out = HXN_BUF_EMPTY;
+	hxn_buf err = HXN_BUF_EMPTY;
+	hxn::check(hxn_file_future_take_remote_frame((hxn_handle *)self, &out, &err), err);
 	return hxn::take_bytes(out);
 }
 

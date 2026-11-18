@@ -5,7 +5,7 @@ const MAX_JOBS = 16;
 export function service(memory, address) {
   const contexts = new Map(), jobs = new Map();
   const encoder = new TextEncoder(), decoder = new TextDecoder('utf-8', {fatal: true});
-  let buffered = 0, active = 0;
+  let buffered = 0, active = 0, remoteLive = 0;
   const shared = typeof SharedArrayBuffer !== 'undefined' && memory.buffer instanceof SharedArrayBuffer;
   const words = () => new Int32Array(memory.buffer);
   const load = index => shared ? Atomics.load(words(), (address >>> 2) + index) >>> 0 : words()[(address >>> 2) + index] >>> 0;
@@ -79,9 +79,126 @@ export function service(memory, address) {
       } finally { try { await reader.cancel(); } catch (_) {} }
     } finally { clearTimeout(timer); }
   }
+
+  function remoteError(context, error) {
+    if (context.error == null) context.error = String(error?.message || error).slice(0,4096);
+    context.closed = true; context.wake?.();
+  }
+  function retire(context) { if(context.live) { remoteLive--; context.live=false; } }
+  function remoteClose(context) {
+    if (!context.remote) return;
+    if(!context.socket || context.socket.readyState === WebSocket.CLOSED) retire(context);
+    remoteError(context, new Error('remote asset was closed'));
+    context.controller.abort();
+    try { context.socket?.close(1000); } catch (_) {}
+    for (const bytes of context.queue) release(context, bytes.byteLength);
+    context.queue.length = 0;
+    context.rejectOpen?.(new Error(context.error));
+  }
+  function remoteOpen(request) {
+    const uri = new URL(request.uri), options = request.options;
+    if (!['http:', 'https:', 'ws:', 'wss:'].includes(uri.protocol) || uri.username || uri.password || uri.hash)
+      throw new Error('invalid remote asset URI');
+    const context = {remote:true, options, uri, queue:[], owned:0, error:null, closed:false, waiting:false,
+      controller:new AbortController(), socket:null, reader:null, wake:null, rejectOpen:null, live:true};
+    contexts.set(request.context, context); remoteLive++;
+    if (uri.protocol === 'ws:' || uri.protocol === 'wss:') {
+      if (Object.keys(options.headers).length) { remoteClose(context); contexts.delete(request.context); throw new Error('browser WebSockets use cookies/subprotocols or signed URIs; custom headers are unavailable'); }
+      context.ready = new Promise((resolve, reject) => {
+        context.rejectOpen = reject;
+        const socket = new WebSocket(uri, options.protocols); context.socket = socket; socket.binaryType = 'arraybuffer';
+        const timeout = setTimeout(() => { remoteError(context, new Error('remote connection timed out')); socket.close(); reject(new Error(context.error)); }, options.timeoutMs);
+        socket.onopen = () => { clearTimeout(timeout); context.rejectOpen = null; resolve(); };
+        socket.onerror = () => { clearTimeout(timeout); remoteError(context, new Error('remote WebSocket failed')); reject(new Error(context.error)); };
+        socket.onclose = event => {
+          clearTimeout(timeout); context.closed = true; retire(context);
+          if (event.code !== 1000 && event.code !== 1001 && !context.error) context.error = 'remote WebSocket closed: ' + event.code;
+          context.wake?.(); reject(new Error(context.error || 'remote WebSocket closed before opening'));
+        };
+        socket.onmessage = event => {
+          if (context.closed) return;
+          try {
+            const text = typeof event.data === 'string';
+            const data = text ? encoder.encode(event.data) : new Uint8Array(event.data);
+            if (data.byteLength > options.maxBytes || context.queue.length >= MAX_JOBS) throw new Error('remote stream backpressure limit exceeded');
+            reserve(context, data.byteLength + 1);
+            const frame = new Uint8Array(data.byteLength + 1); frame[0] = text ? 2 : 1; frame.set(data,1);
+            context.queue.push(frame); context.wake?.();
+          } catch (error) { remoteError(context,error); socket.close(4009); }
+        };
+      });
+    } else {
+      context.ready = (async () => {
+        const timeout = setTimeout(() => context.controller.abort(), options.timeoutMs);
+        try {
+          const response = await fetch(uri, {headers:options.headers, signal:context.controller.signal, credentials:'omit'});
+          if (!response.ok) throw new Error('remote asset fetch failed: HTTP ' + response.status);
+          context.reader = response.body?.getReader() || null;
+        } catch (error) { remoteError(context,error); throw error; }
+        finally { clearTimeout(timeout); }
+      })();
+    }
+    context.ready.catch(() => {});
+    return true;
+  }
+  async function remoteRead(context, request, job) {
+    if (context.waiting) throw new Error('only one remote read may be pending per connection');
+    if (context.closed && context.error && !context.queue.length) throw new Error(context.error);
+    context.waiting = true;
+    try {
+      await context.ready;
+      if (context.socket) {
+        if (request.operation !== 'remoteNext') throw new Error('WS(S) assets require a stream');
+        while (!context.queue.length && !context.closed)
+          await new Promise(resolve => { context.wake = resolve; });
+        context.wake = null;
+        if (context.queue.length) {
+          const frame = context.queue.shift();
+          // Transfer page ownership to the result before releasing the queue's accounting.
+          job.owned += frame.byteLength; context.owned -= frame.byteLength;
+          return frame;
+        }
+        if (context.error) throw new Error(context.error);
+        reserve(job, 1); return new Uint8Array([0]);
+      }
+      if (context.closed && !context.reader) { reserve(job,1); return new Uint8Array([0]); }
+      if (request.operation === 'remoteNext' && context.queue.length) {
+        const bytes=context.queue.shift(), take=bytes.subarray(0,context.options.chunkBytes), rest=bytes.subarray(take.byteLength);
+        reserve(job,take.byteLength+1); release(context,take.byteLength);
+        if(rest.byteLength) context.queue.unshift(rest);
+        const frame=new Uint8Array(take.byteLength+1); frame[0]=1; frame.set(take,1); return frame;
+      }
+      const chunks=[]; let size=0;
+      for (;;) {
+        if (!context.reader) break;
+        let timer;
+        try {
+          const read = await Promise.race([context.reader.read(),new Promise((_,reject) => {
+            timer=setTimeout(() => { context.controller.abort(); reject(new Error('remote read timed out')); },context.options.timeoutMs);
+          })]);
+          if (read.done) { context.closed=true; context.reader=null; break; }
+          const value=read.value;
+          if (request.operation === 'remoteNext') {
+            // HTTP chunks have no record boundaries; keep the configured chunk limit.
+            const capacity=context.options.chunkBytes;
+            const take=value.subarray(0,capacity), rest=value.subarray(capacity);
+            if (rest.byteLength) { reserve(context,rest.byteLength); context.queue.push(rest); }
+            reserve(job,take.byteLength+1); const frame=new Uint8Array(take.byteLength+1); frame[0]=1; frame.set(take,1); return frame;
+          }
+          if (size+value.byteLength > context.options.maxBytes) { context.controller.abort(); throw new Error('remote asset exceeds its byte limit'); }
+          reserve(job,value.byteLength); size+=value.byteLength; chunks.push(value);
+        } finally { clearTimeout(timer); }
+      }
+      if (request.operation === 'remoteNext') { reserve(job,1); return new Uint8Array([0]); }
+      reserve(job,size); const result=new Uint8Array(size); let at=0;
+      for (const chunk of chunks) { result.set(chunk,at); at+=chunk.byteLength; } release(job,size); return result;
+    } finally { context.waiting=false; }
+  }
   async function operate(context, request, job, input) {
     switch (request.operation) {
       case 'asset': return await fetchAsset(context, request, job);
+      case 'remoteRead':
+      case 'remoteNext': return await remoteRead(context, request, job);
       case 'read': {
         const value = await transaction(context, 'readonly', (store, done) => {
           const read = store.get('save/' + request.path); read.onsuccess = () => done(read.result);
@@ -124,7 +241,12 @@ export function service(memory, address) {
         if (!base.pathname.endsWith('/')) base.pathname += '/';
         contexts.set(request.context, {application: request.application, base}); return true;
       }
-      case 'close': contexts.delete(request.context); return true;
+      case 'remoteOpen': {
+        if (contexts.size >= 256 || contexts.has(request.context)) throw new Error('browser context limit exceeded');
+        return remoteOpen(request);
+      }
+      case 'remoteCancel': { const context=contexts.get(request.context); if(context) remoteClose(context); return true; }
+      case 'close': { const context=contexts.get(request.context); if(context) remoteClose(context); contexts.delete(request.context); return true; }
       case 'start': {
         const context = contexts.get(request.context);
         if (!context) throw new Error('file context is closed');
@@ -140,7 +262,7 @@ export function service(memory, address) {
         jobs.set(request.job, job); active++;
         Promise.resolve().then(() => operate(context, request, job, input)).then(data => {
           if (!jobs.has(request.job)) return;
-          if (request.operation !== 'asset' && request.operation !== 'read') { release(job); reserve(job, data.byteLength); }
+          if (!['asset','read','remoteRead','remoteNext'].includes(request.operation)) { release(job); reserve(job, data.byteLength); }
           job.data = data;
         }).catch(error => { job.error = String(error?.message || error).slice(0, 4096); release(job); }).finally(() => {
           active--; job.done = true;
@@ -188,8 +310,8 @@ export function service(memory, address) {
       const sent = load(0);
       if (sent !== seen) { execute(); seen = sent; await Promise.resolve(); continue; }
       // A blocking wait is safe only with no fetch/IDB callbacks awaiting this Worker.
-      if (!active) Atomics.wait(words(), address >>> 2, seen | 0);
-      else if (Atomics.waitAsync) await Atomics.waitAsync(words(), address >>> 2, seen | 0, 4).value;
+      if (!active && !remoteLive) Atomics.wait(words(), address >>> 2, seen | 0);
+      else if (Atomics.waitAsync) await Atomics.waitAsync(words(), address >>> 2, seen | 0).value;
       else await new Promise(resolve => setTimeout(resolve, 4));
     }
   }

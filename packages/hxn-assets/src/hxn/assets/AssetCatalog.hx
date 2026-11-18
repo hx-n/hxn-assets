@@ -24,11 +24,17 @@ class AssetCatalog {
 			if ((asset.group != null && !Std.isOfType(asset.group, String))
 				|| (asset.mediaType != null && !Std.isOfType(asset.mediaType, String)))
 				throw "catalog group/media type must be strings";
+			if (asset.dynamicAsset != null && !Std.isOfType(asset.dynamicAsset, Bool))
+				throw "catalog dynamicAsset must be a boolean";
+			if (asset.streamAsset != null && !Std.isOfType(asset.streamAsset, Bool))
+				throw "catalog streamAsset must be a boolean";
 			final labels = strings(asset.labels), dependencies = strings(asset.dependencies);
 			entries.set(asset.address, {
 				address: asset.address,
 				path: asset.path,
 				contentId: asset.contentId,
+				dynamicAsset: asset.dynamicAsset == true,
+				streamAsset: asset.streamAsset == true,
 				mediaType: asset.mediaType,
 				group: asset.group,
 				labels: labels,
@@ -46,8 +52,12 @@ class AssetCatalog {
 			visit(name, colors, null);
 	}
 
-	static function text(value:Dynamic):Bool
-		return Std.isOfType(value, String) && value.length > 0 && value.indexOf("\x00") < 0;
+	static function text(value:Dynamic):Bool {
+		if (!Std.isOfType(value, String))
+			return false;
+		final text:String = value;
+		return text.length > 0 && text.indexOf("\x00") < 0;
+	}
 
 	static function strings(values:Array<String>):Array<String> {
 		if (values == null)
@@ -68,6 +78,8 @@ class AssetCatalog {
 			address: asset.address,
 			path: asset.path,
 			contentId: asset.contentId,
+			dynamicAsset: asset.dynamicAsset == true,
+			streamAsset: asset.streamAsset == true,
 			mediaType: asset.mediaType,
 			group: asset.group,
 			labels: asset.labels.copy(),

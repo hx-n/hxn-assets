@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "Asynchronous bundled files, application saves and preferences for Haxe"
+description = "Asynchronous files, application persistence and remote URI I/O for Haxe"
 
 [lib]
 name = "hxn_file"
@@ -22,10 +22,14 @@ haxe-flags = ["-D", "hxn_assets_dir=../../tests/fixtures/assets"]
 hxn.workspace = true
 hxn-future.workspace = true
 serde_json.workspace = true
+http = "1"
 serde = { version = "1", features = ["derive"] }
 
 [target.'cfg(not(target_family = "wasm"))'.dependencies]
 cap-std = "4.0.3"
+rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
+ureq = { version = "=3.5.2", default-features = false, features = ["rustls", "rustls-webpki-roots"] }
+tungstenite = { version = "=0.30.0", features = ["rustls-tls-webpki-roots"] }
 
 [target.'cfg(target_os = "android")'.dependencies]
 ndk-context = "0.1.1"

@@ -52,12 +52,39 @@ class AssetLoader {
 		return loaded.map(bytes -> bytes.sub(0, bytes.length));
 	}
 
+	/** Loads byte dependencies, then opens a pull stream without caching its unbounded sequence. */
+	public function openStream(address:String):Future<AssetStream<Bytes>> {
+		if (closed)
+			return Future.rejected(new Exception("asset loader is closed"));
+		try {
+			final order = catalog.order(address), asset = order.pop();
+			if (!Std.isOfType(source, StreamingAssetSource))
+				return Future.rejected(new Exception("asset source cannot open streams"));
+			if (asset.contentId != null)
+				return Future.rejected(new Exception("an unbounded stream has no whole-content digest"));
+			var ready = Future.resolved(Bytes.alloc(0));
+			for (dependency in order) {
+				final selected = dependency;
+				ready = ready.flatMap(_ -> buffer(selected));
+			}
+			return ready.map(_ -> {
+				if (closed)
+					throw "asset loader is closed";
+				return (cast source : StreamingAssetSource).openStream(asset.path);
+			});
+		} catch (error:Dynamic) {
+			return Future.rejected(new Exception(Std.string(error)));
+		}
+	}
+
 	function key(asset:AssetInfo):String
 		return asset.contentId == null ? "address:" + asset.address : asset.contentId;
 
 	function buffer(asset:AssetInfo):Future<Bytes> {
 		if (closed)
 			return Future.rejected(new Exception("asset loader is closed"));
+		if (asset.streamAsset == true)
+			return Future.rejected(new Exception("stream assets require openStream"));
 		final id = key(asset), found = cache.get(id);
 		if (found != null) {
 			found.tick = ++tick;

@@ -30,27 +30,70 @@ package hxn.file;
 ')
 @:noCompletion class HxnFileNative {
 	static function memory_held():Float;
+
 	static function memory_wanted():Bool;
+
 	static function storage_backend_new(application:String, assets:String, data:String):hxn.Handle;
+
 	static function storage_backend_read_asset(self:hxn.Handle, path:String):hxn.Handle;
+
 	static function storage_backend_read_save(self:hxn.Handle, path:String):hxn.Handle;
+
 	static function storage_backend_write_save(self:hxn.Handle, path:String, bytes:haxe.io.Bytes):hxn.Handle;
+
 	static function storage_backend_delete_save(self:hxn.Handle, path:String):hxn.Handle;
+
 	static function storage_backend_get_preference(self:hxn.Handle, key:String):hxn.Handle;
+
 	static function storage_backend_set_preference(self:hxn.Handle, key:String, value:String):hxn.Handle;
+
 	static function storage_backend_delete_preference(self:hxn.Handle, key:String):hxn.Handle;
+
 	static function storage_backend_drop(self:hxn.Handle):Void;
+
 	static function storage_backend_same(self:hxn.Handle, other:hxn.Handle):Bool;
+
 	static function storage_backend_weak(self:hxn.Handle):hxn.Handle;
+
 	static function storage_backend_weak_upgrade(self:hxn.Handle):hxn.Handle;
+
 	static function storage_backend_weak_close(self:hxn.Handle):Void;
+
+	static function remote_backend_new(uri:String, options:String):hxn.Handle;
+
+	static function remote_backend_read(self:hxn.Handle):hxn.Handle;
+
+	static function remote_backend_next(self:hxn.Handle):hxn.Handle;
+
+	static function remote_backend_cancel(self:hxn.Handle):Void;
+
+	static function remote_backend_drop(self:hxn.Handle):Void;
+
+	static function remote_backend_same(self:hxn.Handle, other:hxn.Handle):Bool;
+
+	static function remote_backend_weak(self:hxn.Handle):hxn.Handle;
+
+	static function remote_backend_weak_upgrade(self:hxn.Handle):hxn.Handle;
+
+	static function remote_backend_weak_close(self:hxn.Handle):Void;
+
 	static function outbox_wait(milliseconds:Int):Bool;
+
 	static function outbox_next():Int;
+
 	static function future_state(self:hxn.Handle):Int;
+
 	static function future_wait(self:hxn.Handle, milliseconds:Int):Int;
+
 	static function future_watch(self:hxn.Handle):Int;
+
 	static function future_take_bytes(self:hxn.Handle):haxe.io.Bytes;
+
 	static function future_take_unit(self:hxn.Handle):Bool;
+
 	static function future_take_bool(self:hxn.Handle):Bool;
+
 	static function future_take_preference(self:hxn.Handle):haxe.io.Bytes;
+
+	static function future_take_remote_frame(self:hxn.Handle):haxe.io.Bytes;
 }

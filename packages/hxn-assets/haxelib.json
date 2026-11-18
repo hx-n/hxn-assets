@@ -11,7 +11,8 @@
   "classPath": "src",
   "dependencies": {
     "hxn": "0.3.8",
-    "hxn-file": "0.1.0"
+    "hxn-file": "0.1.0",
+    "format": "3.8.0"
   },
   "hxn": {
     "cli": {

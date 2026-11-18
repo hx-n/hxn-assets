@@ -14,6 +14,7 @@ mod browser;
 #[cfg(not(target_family = "wasm"))]
 mod native;
 mod path;
+mod remote;
 
 hxn::package!("hxn.file");
 
@@ -186,5 +187,53 @@ impl StorageBackend {
         {
             self.inner.delete_preference(&key)
         }
+    }
+}
+
+/// One bounded remote chunk or WebSocket message; an empty message is distinct from end.
+#[hxn::data]
+pub struct RemoteFrame {
+    pub end: bool,
+    pub text: bool,
+    pub bytes: Vec<u8>,
+}
+
+/// URI I/O used by the asset package's remote source and streams.
+#[hxn::interface(shared)]
+pub struct RemoteBackend {
+    inner: Arc<remote::Core>,
+}
+#[hxn::methods]
+impl RemoteBackend {
+    pub fn new(uri: &str, options: &str) -> Result<Self, String> {
+        Ok(Self {
+            inner: Arc::new(remote::Core::new(uri, options)?),
+        })
+    }
+    pub fn read(&self) -> Future<Vec<u8>> {
+        self.inner.read()
+    }
+    pub fn next(&self) -> Future<RemoteFrame> {
+        let future = self.inner.next();
+        hxn_future::spawn(async move {
+            let raw = future.await?;
+            let kind = *raw
+                .first()
+                .filter(|kind| **kind <= 2)
+                .ok_or("invalid remote frame")?;
+            Ok::<_, hxn_future::Failure>(RemoteFrame {
+                end: kind == 0,
+                text: kind == 2,
+                bytes: raw[1..].to_vec(),
+            })
+        })
+    }
+    pub fn cancel(&self) {
+        self.inner.cancel();
+    }
+}
+impl Drop for RemoteBackend {
+    fn drop(&mut self) {
+        self.inner.cancel();
     }
 }

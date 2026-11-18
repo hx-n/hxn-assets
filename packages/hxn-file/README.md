@@ -28,5 +28,9 @@ Browser builds need a served page host: Ash wasm with browser agents, or hxcpp
 with Emscripten, threaded or unthreaded. Use `then` on the browser page thread.
 There is no standalone WASI filesystem backend.
 
+The package also supplies the URI I/O backend used by hxn-assets RemoteSource:
+HTTP(S) reads/chunks and WS(S) messages, with bounded results and explicit cancellation.
+Consumers normally use the typed asset source/stream API.
+
 See [design and limits](https://github.com/hx-n/hxn-assets/blob/main/docs/design.md)
 and [dependency notices](https://github.com/hx-n/hxn-assets/blob/main/packages/hxn-file/third-party/NOTICES.md).

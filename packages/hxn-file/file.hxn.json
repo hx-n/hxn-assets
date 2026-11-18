@@ -10,6 +10,15 @@
         { "name": "found", "type": "bool" },
         { "name": "value", "type": "str" }
       ]
+    },
+    {
+      "name": "RemoteFrame",
+      "docs": "One bounded remote chunk or WebSocket message; an empty message is distinct from end.",
+      "fields": [
+        { "name": "end", "type": "bool" },
+        { "name": "text", "type": "bool" },
+        { "name": "bytes", "type": "bytes" }
+      ]
     }
   ],
   "interfaces": [
@@ -79,6 +88,45 @@
           "kind": "method",
           "params": [{ "name": "key", "type": "str" }],
           "returns": "future<bool>",
+          "fallible": false,
+          "blocking": false
+        }
+      ]
+    },
+    {
+      "name": "RemoteBackend",
+      "docs": "URI I/O used by the asset package's remote source and streams.",
+      "shared": true,
+      "methods": [
+        {
+          "name": "new",
+          "kind": "constructor",
+          "params": [{ "name": "uri", "type": "str" }, { "name": "options", "type": "str" }],
+          "returns": "RemoteBackend",
+          "fallible": true,
+          "blocking": false
+        },
+        {
+          "name": "read",
+          "kind": "method",
+          "params": [],
+          "returns": "future<bytes>",
+          "fallible": false,
+          "blocking": false
+        },
+        {
+          "name": "next",
+          "kind": "method",
+          "params": [],
+          "returns": "future<RemoteFrame>",
+          "fallible": false,
+          "blocking": false
+        },
+        {
+          "name": "cancel",
+          "kind": "method",
+          "params": [],
+          "returns": "void",
           "fallible": false,
           "blocking": false
         }

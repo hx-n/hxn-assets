@@ -23,3 +23,9 @@ Use this repository's git-bug tracker for its work. Follow the
 [verification and packaging conventions](https://github.com/hx-n/hxn-assets/blob/main/docs/conventions.md).
 Retain the [native dependency notices](https://github.com/hx-n/hxn-assets/blob/main/packages/hxn-file/third-party/NOTICES.md)
 with redistributed binaries. A compile-only mobile result is not a runtime pass.
+
+The URI backend supports hxn-assets RemoteSource HTTP(S) reads/chunks and WS(S)
+messages. Reuse the existing browser mailbox and Future delivery; keep transient
+guest pointers out of asynchronous callbacks. Native TLS uses verified roots;
+browser trust and WebSocket header restrictions are browser policy. Keep URI
+transport separate from scoped filesystem path validation.

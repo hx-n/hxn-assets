@@ -4,20 +4,31 @@ package hxn.file;
 /** Makes an `hxn.Future` over one the library returned. **/
 @:noCompletion class HxnFileFuture {
 	public static function ofBytes(hxnRaw:hxn.Handle):hxn.Future<haxe.io.Bytes>
-		return new hxn.Future(HxnFileInbox.inbox, () -> HxnFileNative.future_watch(hxnRaw), () -> HxnFileNative.future_state(hxnRaw), limit -> HxnFileNative.future_wait(hxnRaw, limit), () -> HxnFileNative.future_take_bytes(hxnRaw));
+		return new hxn.Future(HxnFileInbox.inbox, () -> HxnFileNative.future_watch(hxnRaw), () -> HxnFileNative.future_state(hxnRaw),
+			limit -> HxnFileNative.future_wait(hxnRaw, limit), () -> HxnFileNative.future_take_bytes(hxnRaw));
 
 	public static function ofUnit(hxnRaw:hxn.Handle):hxn.Future<hxn.Unit>
-		return new hxn.Future(HxnFileInbox.inbox, () -> HxnFileNative.future_watch(hxnRaw), () -> HxnFileNative.future_state(hxnRaw), limit -> HxnFileNative.future_wait(hxnRaw, limit), () -> {
-			HxnFileNative.future_take_unit(hxnRaw);
-			hxn.Unit.Nothing;
-		});
+		return new hxn.Future(HxnFileInbox.inbox, () -> HxnFileNative.future_watch(hxnRaw), () -> HxnFileNative.future_state(hxnRaw),
+			limit -> HxnFileNative.future_wait(hxnRaw, limit), () -> {
+				HxnFileNative.future_take_unit(hxnRaw);
+				hxn.Unit.Nothing;
+			});
 
 	public static function ofBool(hxnRaw:hxn.Handle):hxn.Future<Bool>
-		return new hxn.Future(HxnFileInbox.inbox, () -> HxnFileNative.future_watch(hxnRaw), () -> HxnFileNative.future_state(hxnRaw), limit -> HxnFileNative.future_wait(hxnRaw, limit), () -> HxnFileNative.future_take_bool(hxnRaw));
+		return new hxn.Future(HxnFileInbox.inbox, () -> HxnFileNative.future_watch(hxnRaw), () -> HxnFileNative.future_state(hxnRaw),
+			limit -> HxnFileNative.future_wait(hxnRaw, limit), () -> HxnFileNative.future_take_bool(hxnRaw));
 
 	public static function ofPreference(hxnRaw:hxn.Handle):hxn.Future<Preference>
-		return new hxn.Future(HxnFileInbox.inbox, () -> HxnFileNative.future_watch(hxnRaw), () -> HxnFileNative.future_state(hxnRaw), limit -> HxnFileNative.future_wait(hxnRaw, limit), () -> {
-			var input = new haxe.io.BytesInput(HxnFileNative.future_take_preference(hxnRaw));
-			Preference.hxnRead(input);
-		});
+		return new hxn.Future(HxnFileInbox.inbox, () -> HxnFileNative.future_watch(hxnRaw), () -> HxnFileNative.future_state(hxnRaw),
+			limit -> HxnFileNative.future_wait(hxnRaw, limit), () -> {
+				var input = new haxe.io.BytesInput(HxnFileNative.future_take_preference(hxnRaw));
+				Preference.hxnRead(input);
+			});
+
+	public static function ofRemoteFrame(hxnRaw:hxn.Handle):hxn.Future<RemoteFrame>
+		return new hxn.Future(HxnFileInbox.inbox, () -> HxnFileNative.future_watch(hxnRaw), () -> HxnFileNative.future_state(hxnRaw),
+			limit -> HxnFileNative.future_wait(hxnRaw, limit), () -> {
+				var input = new haxe.io.BytesInput(HxnFileNative.future_take_remote_frame(hxnRaw));
+				RemoteFrame.hxnRead(input);
+			});
 }

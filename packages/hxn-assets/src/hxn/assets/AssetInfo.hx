@@ -5,6 +5,8 @@ typedef AssetInfo = {
 	var address:String;
 	var path:String;
 	@:optional var contentId:String;
+	@:optional var dynamicAsset:Bool;
+	@:optional var streamAsset:Bool;
 	@:optional var mediaType:String;
 	@:optional var group:String;
 	@:optional var labels:Array<String>;

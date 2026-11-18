@@ -166,11 +166,8 @@ fn atomic_write(root: &Dir, name: &str, bytes: &[u8]) -> Result<(), String> {
             drop(file);
             dir.rename(&temporary, &dir, filename).map_err(error)?;
             #[cfg(unix)]
-            dir.try_clone()
-                .map_err(error)?
-                .into_std_file()
-                .sync_all()
-                .map_err(error)?;
+            // A capability descriptor may be O_PATH; fsync needs a readable directory descriptor.
+            dir.open(".").map_err(error)?.sync_all().map_err(error)?;
             Ok(())
         })();
         if written.is_err() {

@@ -361,3 +361,32 @@ impl Drop for Store {
         let _ = request(json!({"op":"close","context":self.id}));
     }
 }
+
+pub struct Remote {
+    store: Arc<Store>,
+}
+impl Remote {
+    pub fn new(uri: &str, given: &str) -> Result<Self, String> {
+        let (_, options) = crate::remote::options(uri, given)?;
+        if !options.ca_certificates.is_empty() {
+            return Err(
+                "browser TLS trust is controlled by the browser; caCertificates is native-only"
+                    .into(),
+            );
+        }
+        let id = next(&NEXT_CONTEXT)?;
+        request(json!({"op":"remoteOpen","context":id,"uri":uri,"options":options}))?;
+        Ok(Self {
+            store: Arc::new(Store { id }),
+        })
+    }
+    pub fn read(self: &Arc<Self>) -> Future<Vec<u8>> {
+        self.store.submit(json!({"operation":"remoteRead"}))
+    }
+    pub fn next(self: &Arc<Self>) -> Future<Vec<u8>> {
+        self.store.submit(json!({"operation":"remoteNext"}))
+    }
+    pub fn cancel(&self) {
+        let _ = request(json!({"op":"remoteCancel","context":self.store.id}));
+    }
+}

@@ -25,6 +25,19 @@ hxn_status hxn_file_storage_backend_weak(hxn_handle *self, hxn_handle **out, hxn
 hxn_status hxn_file_storage_backend_weak_upgrade(hxn_handle *self, hxn_handle **out, hxn_buf *err);
 hxn_status hxn_file_storage_backend_weak_close(hxn_handle *self, hxn_buf *err);
 
+/* RemoteBackend */
+hxn_status hxn_file_remote_backend_new(hxn_slice uri, hxn_slice options, hxn_handle **out, hxn_buf *err);
+hxn_status hxn_file_remote_backend_read(hxn_handle *self, hxn_handle **out, hxn_buf *err);
+hxn_status hxn_file_remote_backend_next(hxn_handle *self, hxn_handle **out, hxn_buf *err);
+hxn_status hxn_file_remote_backend_cancel(hxn_handle *self, hxn_buf *err);
+hxn_status hxn_file_remote_backend_drop(hxn_handle *self, hxn_buf *err);
+/* Whether two handles hold one value, and a weak reference to it: a handle
+ * of its own, upgraded to a new handle of the value or to null. */
+hxn_status hxn_file_remote_backend_same(hxn_handle *self, hxn_handle *other, int32_t *out, hxn_buf *err);
+hxn_status hxn_file_remote_backend_weak(hxn_handle *self, hxn_handle **out, hxn_buf *err);
+hxn_status hxn_file_remote_backend_weak_upgrade(hxn_handle *self, hxn_handle **out, hxn_buf *err);
+hxn_status hxn_file_remote_backend_weak_close(hxn_handle *self, hxn_buf *err);
+
 /* What the library has for the host. `wait` gives 1 once something is queued
  * or 0 when the limit passes; `next` gives the id of a future, stream or
  * signal that has something new, or -1. */
@@ -39,6 +52,7 @@ hxn_status hxn_file_future_take_bytes(hxn_handle *self, hxn_buf *out, hxn_buf *e
 hxn_status hxn_file_future_take_unit(hxn_handle *self, int32_t *out, hxn_buf *err);
 hxn_status hxn_file_future_take_bool(hxn_handle *self, int32_t *out, hxn_buf *err);
 hxn_status hxn_file_future_take_preference(hxn_handle *self, hxn_buf *out, hxn_buf *err);
+hxn_status hxn_file_future_take_remote_frame(hxn_handle *self, hxn_buf *out, hxn_buf *err);
 
 /* The bytes the library's values hold that the host's collector cannot see,
  * and whether the library asked for a collection since the last call. */
