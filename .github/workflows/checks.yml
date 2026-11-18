@@ -25,6 +25,29 @@ jobs:
       - run: python3 -c 'import subprocess; subprocess.run(["cargo", "test", "--workspace", "--locked"], timeout=600, check=True)'
       - run: python3 scripts/third_party_notices.py --output packages/hxn-file/third-party --check
       - run: haxelib install formatter 1.18.0 --always --quiet
-      - run: haxelib run formatter --check -s packages/hxn-file/sources -s packages/hxn-assets/src -s tests
+      - run: haxelib run formatter --check -s packages/hxn-file/sources -s packages/hxn-assets/src -s tests -s examples
       - name: Catalogs, typed payloads, annotations and compiler reuse
         run: python3 tests/assets/run.py --hxn target/hxn-source --ash ash
+      - name: Knowledge schemas, full DCE and compiler reuse
+        run: python3 tests/knowledge/run.py --hxn target/hxn-source --ash ash
+  kyugraph:
+    name: Optional KyuGraph adapter
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      CARGO_PROFILE_DEV_DEBUG: "0"
+      CARGO_INCREMENTAL: "0"
+      CARGO_BUILD_JOBS: "2"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+        with:
+          runtime: checks
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: adapters/kyugraph -> ../../target/knowledge-kyugraph
+      - run: cargo fmt --manifest-path adapters/kyugraph/Cargo.toml --check
+      - run: python3 scripts/third_party_notices.py --manifest adapters/kyugraph/Cargo.toml --output adapters/kyugraph/third-party --check
+      - name: Real graph queries, revision replay and restart
+        run: python3 tests/knowledge/run.py --hxn target/hxn-source --ash ash --adapter
+      - run: cargo clippy --manifest-path adapters/kyugraph/Cargo.toml --all-targets --target-dir target/knowledge-kyugraph --locked -- -D warnings

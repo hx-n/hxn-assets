@@ -1,0 +1,5 @@
+-lib hxn-assets
+-cp examples/knowledge
+-D hxn_assets_dir=examples/knowledge/assets
+-main KnowledgeExample
+-hl target/knowledge-example.hl

@@ -3,11 +3,11 @@
   "version": "0.1.0",
   "license": "Apache",
   "url": "https://github.com/hx-n/hxn-assets",
-  "description": "Asset catalogs and asynchronous loading over hxn-file",
+  "description": "Typed assets, asynchronous loading and semantic knowledge metadata",
   "contributors": [
     "darmie"
   ],
-  "releasenote": "Asset catalogs and asynchronous loading over portable file storage.",
+  "releasenote": "Typed asset declarations, remote streams and opt-in knowledge metadata.",
   "classPath": "src",
   "dependencies": {
     "hxn": "0.3.9",

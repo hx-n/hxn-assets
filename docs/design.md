@@ -121,8 +121,14 @@ provider. All included declaration classes share the staged address namespace;
 addresses must be unique across those classes. Hashes are verified against copied
 bytes before writing the manifest. Each class's catalog contains its own entries.
 Direct AssetCatalog construction and JSON imports support provider/import
-boundaries and low-level validation tests. Graph projection and hosted service
-adapters remain separate work in the repository-owned issues.
+boundaries and low-level validation tests. Semantic knowledge capture is separate
+from byte loading; providers acquire no graph or service dependency.
+
+## Knowledge metadata
+
+[Knowledge metadata](knowledge.md) describes typed identities, selected facts,
+relationships, spatial bounds and versioned sink publication. Its optional
+native KyuGraph adapter is separate from the portable Haxe package.
 
 ## Remote values and streams
 

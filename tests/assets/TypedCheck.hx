@@ -23,6 +23,7 @@ class TypedCheck {
 	}
 
 	public static function runChecks():Void {
+		KnowledgeCheck.runChecks();
 		check(TypedAssets.Start.name == "start" && TypedAssets.Start.lives == 3, "typed embedded JSON");
 		check(TypedAssets.Start.spawn.x == 1.5 && TypedAssets.Start.tags[0] == "first", "nested JSON shape");
 		check(TypedAssets.Serialized.join(",") == "1,2,3", "embedded Haxe-serialized values");

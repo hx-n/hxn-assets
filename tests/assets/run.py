@@ -31,7 +31,7 @@ def main():
     parser.add_argument("--hxn", type=Path, default=ROOT.parent / "hxn")
     parser.add_argument("--ash", default="ash")
     options = parser.parse_args()
-    common = ["haxe", "-lib", "format:3.8.0", "-cp", options.hxn / "haxe", "-cp", ROOT / "packages/hxn-assets/src"]
+    common = ["haxe", "-lib", "format:3.8.0", "-cp", options.hxn / "haxe", "-cp", ROOT / "packages/hxn-assets/src", "-cp", ROOT / "examples/knowledge"]
     output = run([*common, "-cp", ROOT / "tests/assets", "-D", "hxn_assets_dir=" + str(ROOT / "tests/fixtures/assets"),
                   "-main", "AssetsCheck", "--interp"])
     assert "PASS:" in output, output

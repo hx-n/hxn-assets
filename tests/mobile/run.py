@@ -82,7 +82,7 @@ def main():
         nonce = uuid.uuid4().hex
         (assets / "test-run.txt").write_text(nonce)
         out = work / "out"; out.mkdir(exist_ok=True)
-        flags = ["haxe", "-lib", "format:3.8.0", "-cp", args.hxn / "haxe", "-cp", package, package / "extraParams.hxml", "-cp", ROOT / "packages/hxn-assets/src", "-cp", ROOT / "tests/assets", "-cp", MOBILE, "-cp", remote_dir, "--macro", "hxn.assets.Build.register()", "-D", "hxn_assets_dir=" + str(assets), "-D", "hxn_triple=" + target, "-D", "hxn_file_mobile", "-resource", str(assets / "test-run.txt") + "@mobile-nonce", "-main", "MobileCheck"]
+        flags = ["haxe", "-lib", "format:3.8.0", "-cp", args.hxn / "haxe", "-cp", package, package / "extraParams.hxml", "-cp", ROOT / "packages/hxn-assets/src", "-cp", ROOT / "tests/assets", "-cp", ROOT / "examples/knowledge", "-cp", MOBILE, "-cp", remote_dir, "--macro", "hxn.assets.Build.register()", "-D", "hxn_assets_dir=" + str(assets), "-D", "hxn_triple=" + target, "-D", "hxn_file_mobile", "-resource", str(assets / "test-run.txt") + "@mobile-nonce", "-main", "MobileCheck"]
         if not ios: flags += ["-D", "hxn_mobile_android"]
         if args.runtime == "hl":
             run([*flags, "-hl", out / "main.hl"])

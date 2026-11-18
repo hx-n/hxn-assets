@@ -1,0 +1,3 @@
+[build]
+# KyuGraph's deeply nested parser types need compact symbols on macOS.
+rustflags = ["-C", "symbol-mangling-version=v0"]

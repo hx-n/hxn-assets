@@ -70,7 +70,8 @@ class AssetLoader {
 			return ready.map(_ -> {
 				if (closed)
 					throw "asset loader is closed";
-				return (cast source : StreamingAssetSource).openStream(asset.path);
+				final streaming:StreamingAssetSource = cast source;
+				return streaming.openStream(asset.path);
 			});
 		} catch (error:Dynamic) {
 			return Future.rejected(new Exception(Std.string(error)));

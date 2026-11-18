@@ -56,7 +56,7 @@ def main():
             run([cli, "build", target, *flags], cwd=ROOT / "packages/hxn-file")
             binding = "cppia" if mode == "cppia" else target + ("-wasm" if wasm else "") + ("-threads" if threaded else "")
             hxml = ROOT / "target/hxn/file" / binding / "build.hxml"
-            compiler = ["haxe", hxml, "-lib", "format:3.8.0", "-cp", ROOT / "packages/hxn-assets/src", "-cp", ROOT / "tests/assets",
+            compiler = ["haxe", hxml, "-lib", "format:3.8.0", "-cp", ROOT / "packages/hxn-assets/src", "-cp", ROOT / "tests/assets", "-cp", ROOT / "examples/knowledge",
                         "-D", "hxn_assets_dir=" + str(ROOT / "tests/fixtures/assets"), "--macro", "hxn.assets.Build.register()", "-main", options.main]
             for path in options.class_path: compiler += ["-cp",path]
             if target == "hl":
@@ -76,7 +76,7 @@ def main():
                 run([ROOT / ("target/hxn/file/cppia/host/out/Host" + executable), destination / "main.cppia", destination / "assets", destination / "data"], timeout=60)
             else:
                 if wasm:
-                    compiler += ["-D", "HXCPP_LINK_EMSCRIPTEN_EXT=.html", "-D", "HXCPP_LINK_EMRUN"]
+                    compiler += ["-D", "HXCPP_LINK_EMSCRIPTEN_EXT=.html", "-D", "HXCPP_LINK_EMRUN", "-D", "HXCPP_LINK_MEMORY_GROWTH"]
                 run([*compiler, "-cpp", destination / "out"])
                 if wasm:
                     stdout, stderr = destination / "page-stdout.txt", destination / "page-stderr.txt"

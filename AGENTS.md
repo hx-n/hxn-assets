@@ -20,7 +20,9 @@ hxcpp and CPPIA; browser checks use Ash wasm and both hxcpp wasm modes.
 Exercise real iOS/Android bundle/APK assets and persistence. Run under timeouts,
 repeat concurrent tests, and report unavailable platforms. Windows requires CI.
 Run Haxe formatter before committing Haxe changes. Keep test-only hosts and
-fixtures under tests/ and outside published CLI tools/assets.
+fixtures under tests/ and outside published CLI tools/assets. Knowledge checks
+also run tests/knowledge/run.py. The optional native adapter under
+adapters/kyugraph is a separate Cargo workspace with its own pinned notices.
 
 Public tools are hxn CLI plugins, usable from installed haxelibs. Skills use
 absolute HTTPS documentation links. Ship pinned dependency notices/source

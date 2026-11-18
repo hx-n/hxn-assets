@@ -1,0 +1,15 @@
+[package]
+name = "hxn-assets-kyugraph"
+version = "0.1.0"
+edition = "2024"
+license = "Apache-2.0"
+publish = false
+description = "Optional native KyuGraph sink for hxn semantic knowledge batches"
+
+[workspace]
+
+[dependencies]
+kyu-graph = "=0.4.0"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"

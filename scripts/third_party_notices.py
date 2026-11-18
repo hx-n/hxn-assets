@@ -48,23 +48,38 @@ def is_notice(name):
     return Path(name).suffix.lower() not in ('.rs', '.c', '.h', '.cpp', '.hx', '.py', '.js', '.ts') and bool(re.match(r'^(licen[sc]e|notice|copying|copyright)([.\-_]|$)', name, re.I))
 
 
-def upstream(package, root):
+def upstream(package, root, source_roots=()):
     vcs = root / '.cargo_vcs_info.json'
-    repo = package.get('repository')
+    repo = package.get('_notice_repository') or package.get('repository')
     source = package.get('source') or ''
     if not repo and source.startswith('git+'):
         repo = source[4:].split('?')[0].split('#')[0]
     if not repo or 'github.com/' not in repo:
         return []
-    repo = repo.split('github.com/', 1)[1].removesuffix('.git').rstrip('/')
+    repo = '/'.join(repo.split('github.com/', 1)[1].split('/')[:2]).removesuffix('.git')
     revision = json.loads(vcs.read_text())['git']['sha1'] if vcs.exists() else source.rsplit('#', 1)[-1]
     if not re.fullmatch(r'[a-f0-9]{7,40}', revision):
         return []
-    listing = json.loads(fetch(f'https://api.github.com/repos/{repo}/contents?ref={revision}'))
+    for source_root in source_roots:
+        remote = subprocess.run(['git', '-C', str(source_root), 'remote', 'get-url', 'origin'], capture_output=True, text=True, check=True).stdout.strip()
+        if remote.removesuffix('.git') != 'https://github.com/' + repo:
+            continue
+        tree = subprocess.run(['git', '-C', str(source_root), 'ls-tree', '--name-only', revision], capture_output=True, text=True)
+        if tree.returncode:
+            continue
+        names = [name for name in tree.stdout.splitlines() if is_notice(name)]
+        if names:
+            return [(name, subprocess.check_output(['git', '-C', str(source_root), 'show', revision + ':' + name])) for name in names]
+    try:
+        listing = json.loads(fetch(f'https://api.github.com/repos/{repo}/contents?ref={revision}'))
+    except urllib.error.HTTPError as error:
+        if error.code == 404:
+            return []
+        raise
     return [(entry['name'], fetch(entry['download_url'])) for entry in listing if entry['type'] == 'file' and is_notice(entry['name'])]
 
 
-def material(package, output, apache, mit, previous, existing):
+def material(package, output, apache, mit, previous, existing, source_roots=()):
     root = Path(package['manifest_path']).parent
     destination = output / 'licenses' / package.get('_notice_name', f"{package['name']}-{package['version']}")
     destination.mkdir(parents=True)
@@ -79,14 +94,14 @@ def material(package, output, apache, mit, previous, existing):
         if old and old['license'] == package['license']:
             files = [(str(Path(name).relative_to(Path('licenses') / destination.name)), (existing / name).read_bytes()) for name in old['files'] if is_notice(Path(name).name) or Path(name).name == 'UPSTREAM-MANIFEST.txt']
         if not files and package.get('license'):
-            files = upstream(package, root)
+            files = upstream(package, root, source_roots)
     license_id = package.get('license') or ''
     if not files:
         if not license_id:
             files = [('UPSTREAM-MANIFEST.txt', Path(package['manifest_path']).read_bytes())]
         elif license_id == 'CC0-1.0':
             files = [('LICENSE-CC0', fetch('https://raw.githubusercontent.com/spdx/license-list-data/v3.27.0/text/CC0-1.0.txt'))]
-        elif 'Apache-2.0' in license_id and 'AND' not in license_id:
+        elif 'Apache-2.0' in license_id and 'AND' not in license_id and 'WITH' not in license_id:
             files = [('LICENSE-APACHE', apache)]
         elif license_id == 'MIT':
             # Upstream declares MIT but supplies no separate copyright notice.
@@ -124,6 +139,7 @@ def main():
     parser.add_argument('--extra-package', action='append', default=[])
     parser.add_argument('--output', type=Path, default=Path('third-party'))
     parser.add_argument('--check', action='store_true')
+    parser.add_argument('--upstream-source', action='append', type=Path, default=[], help='read upstream root notices at the packaged VCS revision from a matching local checkout')
     args = parser.parse_args()
     if args.check:
         inventory = json.loads((args.output / 'inventory.json').read_text())
@@ -146,6 +162,18 @@ def main():
         extra = metadata(args.extra_manifest)
         packages += reachable(extra, [p['id'] for p in extra['packages'] if p['name'] in args.extra_package])
     packages = list({p['id']: p for p in packages}.values())
+    # Some workspace crates omit repository while sharing a pinned VCS commit.
+    repositories = {}
+    for package in packages:
+        vcs = Path(package['manifest_path']).parent / '.cargo_vcs_info.json'
+        if vcs.exists() and package.get('repository'):
+            repositories.setdefault(json.loads(vcs.read_text())['git']['sha1'], set()).add(package['repository'].split('/tree/')[0].split('/blob/')[0])
+    for package in packages:
+        vcs = Path(package['manifest_path']).parent / '.cargo_vcs_info.json'
+        if vcs.exists() and not package.get('repository'):
+            matches = repositories.get(json.loads(vcs.read_text())['git']['sha1'], set())
+            if len(matches) == 1:
+                package['_notice_repository'] = next(iter(matches))
     for package in packages:
         if sum(p['name'] == package['name'] and p['version'] == package['version'] for p in packages) > 1:
             revision = hashlib.sha256(package['source'].encode()).hexdigest()[:8]
@@ -166,7 +194,7 @@ def main():
         old = json.loads((output / 'inventory.json').read_text())
         previous = {(p['name'], p['version'], p.get('source')): p for p in old['packages']}
     with ThreadPoolExecutor(max_workers=6) as pool:
-        records = list(pool.map(lambda p: material(p, temporary, apache, mit, previous, output), packages))
+        records = list(pool.map(lambda p: material(p, temporary, apache, mit, previous, output, args.upstream_source), packages))
     records.sort(key=lambda p: (p['name'], p['version']))
     base = args.manifest.resolve().parent
     lock = base / 'Cargo.lock'

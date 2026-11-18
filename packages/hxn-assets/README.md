@@ -52,6 +52,12 @@ See [types, metadata and lifecycle](https://github.com/hx-n/hxn-assets/blob/main
 [conventions](https://github.com/hx-n/hxn-assets/blob/main/docs/conventions.md) and
 [codec notices](https://github.com/hx-n/hxn-assets/blob/main/packages/hxn-assets/third-party/NOTICES.md).
 
+Knowledge metadata selects typed identities, facts, relationships and world-space
+bounds from assets and live state. See the
+[lore, progress and NPC example](https://github.com/hx-n/hxn-assets/tree/main/examples/knowledge)
+and [knowledge guide](https://github.com/hx-n/hxn-assets/blob/main/docs/knowledge.md).
+An optional native KyuGraph adapter consumes the same versioned snapshots.
+
 ## Logging
 
 Diagnostics use core `hxn.Log` with target `hxn.assets`.

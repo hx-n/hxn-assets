@@ -120,6 +120,7 @@ class Values {
 					case "Int": {kind: "int"};
 					case "Float": {kind: "float"};
 					case "Bool": {kind: "bool"};
+					case "KnowledgeRef" if (reference.get().pack.join(".") == "hxn.assets"): {kind: "string"};
 					case "Null": {kind: "nullable", value: shape(parameters[0], pos, visited)};
 					case _: Context.error("this dynamic asset type needs @:assetDecode", pos);
 				}

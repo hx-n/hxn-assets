@@ -22,6 +22,12 @@ plans, alternatives, measurements and unfinished work in those issues.
   Reserve hand-built catalogs for provider/import boundaries and low-level tests.
 - Canonical filesystem containment uses normalized host separators and directory
   boundaries. Logical asset keys retain their portable forward-slash syntax.
+- Knowledge metadata selects typed identities, facts, relations and spatial data.
+  Generate reads through Knowledge.capture and exclude unannotated state. Sinks
+  replace outgoing links and preserve source revisions, tombstones and replay.
+  Follow the [knowledge contract](knowledge.md); portable code never imports the
+  optional native graph engine. Rebuild typed containers after JSON decoding
+  before native array operations; dynamic JSON arrays are not typed string arrays.
 - Keep asset identity separate from logical addresses. Verify optional digests
   before caching. Keep providers independent of service or graph implementations.
 - Keep remote values explicitly dynamic. Preserve WS message boundaries and HTTP
@@ -38,6 +44,15 @@ plans, alternatives, measurements and unfinished work in those issues.
 Run `cargo fmt --all`, `cargo clippy --workspace --all-targets` and
 `cargo test --workspace`. Format hand-written Haxe with Haxe formatter.
 Run runtime programs under timeouts and repeat concurrent tests.
+`python3 tests/knowledge/run.py --ash <ash>` checks schema diagnostics, full DCE
+and compiler-server reuse. Add `--adapter` for the published native KyuGraph
+crate or `--kyugraph <checkout>` for local engine source. The optional adapter is
+a separate Cargo workspace under adapters/kyugraph; run its fmt/clippy and
+replay checks separately. Generate its own notices with scripts/third_party_notices.py
+--manifest adapters/kyugraph/Cargo.toml --output adapters/kyugraph/third-party.
+The optional --upstream-source <checkout> reads notices at the exact packaged
+VCS revision from a matching repository. Preserve LLVM exception terms; these
+native dependencies never enter the portable hxn-file inventory.
 
 The file fixture is tests/check/Main.hx, selected by hxn-file's Cargo metadata.
 From packages/hxn-file, use `hxn run hl`, `hxn run hl --vm ash`, Ash's JIT and
@@ -51,7 +66,9 @@ catalog/cache suite, typed embedded/dynamic values, annotation compile errors,
 exact staged/runtime catalogs,
 inlining/dead-code elimination, compiler-server reuse and asset-edit invalidation.
 The runner uses an Ash executable (override with `--ash`) and isolated temporary
-output beneath target/. `tests/assets/runtimes.py` runs the real FileSource and
+output beneath target/. Emscripten fixtures enable HXCPP_LINK_MEMORY_GROWTH for the bounded-payload
+stress cases; application heap policy remains configurable.
+`tests/assets/runtimes.py` runs the real FileSource and
 save fixture with generated catalogs: modes are `hl`, `ash`, `ash-jit`, `ash-interp`,
 `cpp`, `cppia`, `wasm`, `emcc` and `emcc-threads`. It uses hxn to build adapters,
 then compiles the consumer fixture. Set `--hxn`, `--cli`, `--ash` or `--chrome`

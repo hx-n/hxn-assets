@@ -56,6 +56,12 @@ dependencies, verifies content IDs and caches bounded byte payloads.
 See the [hxn-assets API](https://github.com/hx-n/hxn-assets/blob/main/packages/hxn-assets/README.md)
 for dynamic fields, remote streams and the `hxn assets` CLI commands.
 
+Knowledge metadata selects typed identities, facts, relationships and world-space
+bounds from assets and live state. See the
+[lore, progress and NPC example](https://github.com/hx-n/hxn-assets/tree/main/examples/knowledge)
+and [knowledge guide](https://github.com/hx-n/hxn-assets/blob/main/docs/knowledge.md).
+An optional native KyuGraph adapter consumes the same versioned snapshots.
+
 The [design](https://github.com/hx-n/hxn-assets/blob/main/docs/design.md) and
 [conventions](https://github.com/hx-n/hxn-assets/blob/main/docs/conventions.md)
 cover ownership, platform behavior and verification. Each package retains its
