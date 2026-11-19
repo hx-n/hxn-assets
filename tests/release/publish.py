@@ -77,7 +77,7 @@ def main():
                 print("PASS: Haxelib already has " + name + " " + version, flush=True)
                 break
             try:
-                result = subprocess.run(["haxelib", "submit", str(path), "darmie", password, "--never"], capture_output=True, text=True, timeout=600, stdin=subprocess.DEVNULL)
+                result = subprocess.run(["haxelib", "submit", str(path), password, "--never"], capture_output=True, text=True, timeout=600, stdin=subprocess.DEVNULL)
                 text = (result.stdout + result.stderr).replace(password, "[redacted]")
             except subprocess.TimeoutExpired:
                 text = "Haxelib upload timed out; checking whether the server accepted it"
