@@ -149,6 +149,11 @@ Configure the repository's HAXELIB_PASSWORD secret for the darmie publisher.
 A manual workflow run validates and retains archives without publishing.
 After main CI passes, tag the same commit. A tag run publishes both archives
 and checksums to one GitHub release, then submits hxn-file before hxn-assets.
+If submission fails after the GitHub release exists, run Publish existing release
+with that immutable tag. It verifies the tag, archive metadata, SHA256SUMS and
+GitHub asset digests, then submits only missing Haxelib versions. It does not
+rebuild archives or move a release tag. A rejected password stops retries;
+transient upload failures are retried after checking for server acceptance.
 Refresh released API references and skills on hxn.dev after Haxelib accepts both.
 
 ## Logging

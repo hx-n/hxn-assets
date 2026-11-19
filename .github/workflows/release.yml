@@ -143,6 +143,9 @@ jobs:
           python3 tests/release/package.py --check-dist
           cd target/release-dist
           sha256sum *.zip > SHA256SUMS
-          gh release create "$GITHUB_REF_NAME" --verify-tag --title "hxn-file and hxn-assets ${GITHUB_REF_NAME#v}" --notes-file ../../tests/release/notes.md *.zip SHA256SUMS
-          haxelib submit hxn-file-*.zip darmie "$HAXELIB_PASSWORD" --never < /dev/null
-          haxelib submit hxn-assets-*.zip darmie "$HAXELIB_PASSWORD" --never < /dev/null
+          if gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1; then
+            gh release download "$GITHUB_REF_NAME" --clobber --pattern 'hxn-file-*.zip' --pattern 'hxn-assets-*.zip' --pattern SHA256SUMS
+          else
+            gh release create "$GITHUB_REF_NAME" --verify-tag --title "hxn-file and hxn-assets ${GITHUB_REF_NAME#v}" --notes-file ../../tests/release/notes.md *.zip SHA256SUMS
+          fi
+          python3 ../../tests/release/publish.py --tag "$GITHUB_REF_NAME" --dist .
