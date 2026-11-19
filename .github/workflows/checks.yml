@@ -25,7 +25,7 @@ jobs:
       - run: python3 -c 'import subprocess; subprocess.run(["cargo", "test", "--workspace", "--locked"], timeout=600, check=True)'
       - run: python3 scripts/third_party_notices.py --output packages/hxn-file/third-party --check
       - run: haxelib install formatter 1.18.0 --always --quiet
-      - run: haxelib run formatter --check -s packages/hxn-file/sources -s packages/hxn-assets/src -s tests -s examples
+      - run: haxelib run formatter --check -s packages/hxn-file/sources -s packages/hxn-assets/src -s tests/assets -s tests/check -s tests/mobile/MobileCheck.hx -s examples
       - name: Catalogs, typed payloads, annotations and compiler reuse
         run: python3 tests/assets/run.py --hxn tests/.tools/hxn --ash ash
       - name: Knowledge schemas, full DCE and compiler reuse
