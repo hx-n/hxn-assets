@@ -9,6 +9,12 @@ access and application persistence. **hxn-assets** builds on it with typed,
 annotated assets, dependency loading and optional content addressing. Both work
 on native and browser runtimes through hxn; applications can use hxn-file alone.
 
+```text
+haxelib install hxn-assets 0.1.0
+```
+
+This installs hxn-file too. Use `haxelib install hxn-file 0.1.0` for file I/O alone.
+
 ## hxn-file: files, saves and preferences
 
 Read bundled bytes, write application-scoped saves and store string preferences.

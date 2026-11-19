@@ -5,6 +5,7 @@ edition.workspace = true
 license.workspace = true
 repository.workspace = true
 description = "Asynchronous files, application persistence and remote URI I/O for Haxe"
+keywords = ["hxcpp", "hashlink", "native", "cross", "wasm"]
 
 [lib]
 name = "hxn_file"
@@ -13,7 +14,7 @@ name = "hxn_file"
 library = "file"
 haxelib = "hxn-file"
 contributors = ["darmie"]
-releasenote = "Asynchronous bundled files, saves and preferences across native, mobile and browser runtimes."
+releasenote = "Scoped bundled files, saves, preferences and HTTP(S)/WS(S) I/O on desktop, mobile and browser runtimes, with shared hxn logging."
 haxe = "../../tests/check"
 init = ["hxn.file.Init.register()"]
 haxe-flags = ["-D", "hxn_assets_dir=../../tests/fixtures/assets"]

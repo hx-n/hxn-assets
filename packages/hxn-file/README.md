@@ -1,5 +1,9 @@
 # hxn-file
 
+```text
+haxelib install hxn-file 0.1.0
+```
+
 Read bundled assets and persist application saves and string preferences through
 `hxn.Future`, using the same Haxe API on native and browser runtimes.
 

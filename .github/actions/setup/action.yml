@@ -2,7 +2,7 @@ name: setup
 description: Pinned core sources, Rust, Haxe and the runtimes used by this monorepo.
 inputs:
   runtime:
-    description: checks, native or browser
+    description: checks, native, browser or package
     required: true
 runs:
   using: composite
@@ -17,7 +17,7 @@ runs:
         toolchain: nightly-2026-08-25
         components: rust-src, rustfmt, clippy
     - uses: Swatinem/rust-cache@v2
-    - if: runner.os != 'macOS'
+    - if: runner.os == 'Windows' || (runner.os == 'Linux' && runner.arch != 'ARM64')
       uses: krdlab/setup-haxe@v1
       with:
         haxe-version: 4.3.6
@@ -25,6 +25,13 @@ runs:
       shell: bash
       run: |
         brew install haxe
+        mkdir -p "$HOME/haxelib"
+        haxelib setup "$HOME/haxelib"
+    - if: runner.os == 'Linux' && runner.arch == 'ARM64'
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y haxe
         mkdir -p "$HOME/haxelib"
         haxelib setup "$HOME/haxelib"
     - uses: actions/setup-python@v5
@@ -52,7 +59,7 @@ runs:
         make -C "$RUNNER_TEMP/hashlink" libhl hl fmt
         echo "$RUNNER_TEMP/hashlink" >> "$GITHUB_PATH"
         echo "LD_LIBRARY_PATH=$RUNNER_TEMP/hashlink${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" >> "$GITHUB_ENV"
-    - if: inputs.runtime == 'native' && runner.os == 'Windows'
+    - if: (inputs.runtime == 'native' || inputs.runtime == 'package') && runner.os == 'Windows'
       shell: bash
       env:
         GH_TOKEN: ${{ github.token }}
@@ -66,7 +73,7 @@ runs:
     - shell: bash
       run: |
         case "$RUNNER_OS" in
-          Linux) archive=ash-linux-x86_64.tar.gz ;;
+          Linux) archive=ash-linux-$([ "$RUNNER_ARCH" = ARM64 ] && echo aarch64 || echo x86_64).tar.gz ;;
           macOS) archive=ash-macos-aarch64.tar.gz ;;
           Windows) archive=ash-windows-x86_64.tar.gz ;;
         esac

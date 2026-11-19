@@ -1,0 +1,148 @@
+name: release
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+permissions:
+  contents: read
+defaults:
+  run:
+    shell: bash
+jobs:
+  package:
+    name: package, ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-latest, name: linux-x86_64 }
+          - { os: ubuntu-24.04-arm, name: linux-aarch64 }
+          - { os: macos-latest, name: macos-aarch64 }
+          - { os: windows-latest, name: windows-x86_64 }
+          - { os: macos-latest, name: macos-x86_64, runtimes: cpp, target: x86_64-apple-darwin }
+          - { os: macos-latest, name: ios, runtimes: hl cpp, target: aarch64-apple-ios }
+          - { os: macos-latest, name: ios-simulator, runtimes: hl cpp, target: aarch64-apple-ios-sim }
+          - { os: ubuntu-latest, name: android, runtimes: hl cpp, target: aarch64-linux-android }
+          - { os: ubuntu-latest, name: ash-wasm-threads, runtimes: hl, wasm: true, threads: true }
+          - { os: ubuntu-latest, name: emcc-wasm, runtimes: cpp, wasm: true, emcc: true }
+          - { os: ubuntu-latest, name: emcc-wasm-threads, runtimes: cpp, wasm: true, threads: true, emcc: true }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+        with:
+          runtime: package
+      - run: python3 scripts/third_party_notices.py --output packages/hxn-file/third-party --check
+      - if: matrix.target
+        run: rustup target add ${{ matrix.target }}
+      - if: matrix.name == 'android'
+        run: |
+          ndk="$ANDROID_NDK_LATEST_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin"
+          echo "CC_aarch64_linux_android=$ndk/aarch64-linux-android26-clang" >> "$GITHUB_ENV"
+          echo "AR_aarch64_linux_android=$ndk/llvm-ar" >> "$GITHUB_ENV"
+          echo "CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER=$ndk/aarch64-linux-android26-clang" >> "$GITHUB_ENV"
+      - if: matrix.emcc
+        run: |
+          rustup target add wasm32-unknown-emscripten
+          git clone --depth 1 https://github.com/emscripten-core/emsdk "$RUNNER_TEMP/emsdk"
+          "$RUNNER_TEMP/emsdk/emsdk" install 5.0.7
+          "$RUNNER_TEMP/emsdk/emsdk" activate 5.0.7
+      - name: Package native bindings
+        working-directory: packages/hxn-file
+        run: |
+          if [ -f "$RUNNER_TEMP/emsdk/emsdk_env.sh" ]; then source "$RUNNER_TEMP/emsdk/emsdk_env.sh"; fi
+          hxn package ${{ matrix.runtimes || 'hl cpp' }} --release ${{ matrix.target && format('--target {0}', matrix.target) || '' }} ${{ matrix.wasm && '--wasm' || '' }} ${{ matrix.threads && '--threads' || '' }} --out ../../target/release-part
+      - uses: actions/upload-artifact@v4
+        with:
+          name: package-${{ matrix.name }}
+          path: target/release-part
+  haxelibs:
+    needs: package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: package-*
+          path: target/release-parts
+      - run: python3 tests/release/package.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: haxelibs
+          path: target/release-dist/*.zip
+  try-native:
+    name: installed, ${{ matrix.os }}
+    needs: haxelibs
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+        with:
+          runtime: package
+      - uses: actions/download-artifact@v4
+        with:
+          name: haxelibs
+          path: target/release-dist
+      - run: python3 tests/release/run.py native
+  try-browser:
+    name: installed, ${{ matrix.mode }}, Chrome
+    needs: haxelibs
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [wasm, emcc, emcc-threads]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+        with:
+          runtime: browser
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@v4
+        with:
+          name: haxelibs
+          path: target/release-dist
+      - run: |
+          git clone --depth 1 https://github.com/emscripten-core/emsdk "$RUNNER_TEMP/emsdk"
+          "$RUNNER_TEMP/emsdk/emsdk" install 5.0.7
+          "$RUNNER_TEMP/emsdk/emsdk" activate 5.0.7
+      - run: |
+          source "$RUNNER_TEMP/emsdk/emsdk_env.sh"
+          unset CC CXX
+          python3 tests/release/run.py "${{ matrix.mode }}" --chrome "$(command -v google-chrome)"
+  publish:
+    needs: [try-native, try-browser]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: haxelibs
+          path: target/release-dist
+      - uses: krdlab/setup-haxe@v1
+        with:
+          haxe-version: 4.3.6
+      - name: Publish both packages
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HAXELIB_PASSWORD: ${{ secrets.HAXELIB_PASSWORD }}
+        run: |
+          test -n "$HAXELIB_PASSWORD" || { echo "::error::Configure HAXELIB_PASSWORD before publishing"; exit 1; }
+          python3 tests/release/package.py --check-dist
+          cd target/release-dist
+          sha256sum *.zip > SHA256SUMS
+          gh release create "$GITHUB_REF_NAME" --verify-tag --title "hxn-file and hxn-assets ${GITHUB_REF_NAME#v}" --notes-file ../../tests/release/notes.md *.zip SHA256SUMS
+          haxelib submit hxn-file-*.zip darmie "$HAXELIB_PASSWORD" --never < /dev/null
+          haxelib submit hxn-assets-*.zip darmie "$HAXELIB_PASSWORD" --never < /dev/null

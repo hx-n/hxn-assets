@@ -27,5 +27,13 @@
       ],
       "hooks": []
     }
-  }
+  },
+  "tags": [
+    "hxcpp",
+    "hashlink",
+    "native",
+    "cross",
+    "wasm",
+    "assets"
+  ]
 }

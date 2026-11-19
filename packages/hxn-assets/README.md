@@ -1,5 +1,9 @@
 # hxn-assets
 
+```text
+haxelib install hxn-assets 0.1.0
+```
+
 Declare assets in Haxe metadata and read them as their actual data types.
 JSON can be `Dynamic` or a typed structure, text is `String`, binary is `Bytes`,
 and PNG images are portable `ImageData` pixels.
