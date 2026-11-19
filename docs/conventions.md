@@ -109,7 +109,8 @@ The Checks workflow runs Rust, formatting, dependency-notice and annotation
 checks on Linux. Native runs the file, asset and remote fixtures under stock
 HashLink on Linux/Windows, all three Ash modes, hxcpp and CPPIA on Linux,
 macOS and Windows. Browser runs real Chrome pages with Ash wasm and both
-Emscripten threading modes. All use the pinned hxn source/CLI and bounded
+Emscripten threading modes. The pinned hxn checkout lives under tests/.tools, outside restored Cargo target
+caches. All use the pinned hxn source/CLI and bounded
 runtime invocations; failed runtime logs are retained as CI artifacts.
 `tests/ci/run.py` runs each runtime's file, asset and remote checks together.
 Native fixture runners set the binding directory on the VM loader search path,

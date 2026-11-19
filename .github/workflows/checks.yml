@@ -27,9 +27,9 @@ jobs:
       - run: haxelib install formatter 1.18.0 --always --quiet
       - run: haxelib run formatter --check -s packages/hxn-file/sources -s packages/hxn-assets/src -s tests -s examples
       - name: Catalogs, typed payloads, annotations and compiler reuse
-        run: python3 tests/assets/run.py --hxn target/hxn-source --ash ash
+        run: python3 tests/assets/run.py --hxn tests/.tools/hxn --ash ash
       - name: Knowledge schemas, full DCE and compiler reuse
-        run: python3 tests/knowledge/run.py --hxn target/hxn-source --ash ash
+        run: python3 tests/knowledge/run.py --hxn tests/.tools/hxn --ash ash
   kyugraph:
     name: Optional KyuGraph adapter
     runs-on: ubuntu-latest
@@ -49,5 +49,5 @@ jobs:
       - run: cargo fmt --manifest-path adapters/kyugraph/Cargo.toml --check
       - run: python3 scripts/third_party_notices.py --manifest adapters/kyugraph/Cargo.toml --output adapters/kyugraph/third-party --check
       - name: Real graph queries, revision replay and restart
-        run: python3 tests/knowledge/run.py --hxn target/hxn-source --ash ash --adapter
+        run: python3 tests/knowledge/run.py --hxn tests/.tools/hxn --ash ash --adapter
       - run: cargo clippy --manifest-path adapters/kyugraph/Cargo.toml --all-targets --target-dir target/knowledge-kyugraph --locked -- -D warnings

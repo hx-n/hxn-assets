@@ -11,7 +11,7 @@ runs:
       with:
         repository: hx-n/hxn
         ref: v0.3.9
-        path: target/hxn-source
+        path: tests/.tools/hxn
     - uses: dtolnay/rust-toolchain@master
       with:
         toolchain: nightly-2026-08-25
@@ -48,7 +48,7 @@ runs:
         dir="$(haxelib libpath hxcpp)"
         git -C "$dir" checkout -q 615adc73d5ef28f3f74ea47977c39c4f25ce256d
         (cd "$dir/tools/hxcpp" && haxe compile.hxml)
-        cargo install --path target/hxn-source/crates/hxn-cli --locked
+        cargo install --path tests/.tools/hxn/crates/hxn-cli --locked
         hxn version
     - if: inputs.runtime == 'native' && runner.os == 'Linux'
       shell: bash

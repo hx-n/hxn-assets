@@ -14,7 +14,7 @@ def main():
     parser.add_argument("mode", choices=("native", "wasm", "emcc", "emcc-threads"))
     parser.add_argument("--ash", default="ash")
     parser.add_argument("--chrome", default="google-chrome")
-    parser.add_argument("--hxn", type=Path, default=ROOT / "target/hxn-source")
+    parser.add_argument("--hxn", type=Path, default=ROOT / "tests/.tools/hxn")
     args = parser.parse_args()
     out = ROOT / "target/release-consumer" / args.mode
     out.mkdir(parents=True, exist_ok=True)

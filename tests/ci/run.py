@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[2]
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("mode", choices=("native", "wasm", "emcc", "emcc-threads"))
-    parser.add_argument("--hxn", type=Path, default=ROOT / "target/hxn-source")
+    parser.add_argument("--hxn", type=Path, default=ROOT / "tests/.tools/hxn")
     parser.add_argument("--cli", default="hxn")
     parser.add_argument("--ash", default="ash")
     parser.add_argument("--chrome", default="google-chrome")
