@@ -1,1 +1,1 @@
-{"author":{"id":"585844baa6074d44d241f46aa7c9f21ff46653adf617d7f070fbfe327626c989"},"ops":[{"type":5,"timestamp":1795214307,"nonce":"Jp0BEE+hzNmfqqugPnQoxnlMJRg=","added":["perf","area:assets","area:me"],"removed":null}]}
+{"author":{"id":"585844baa6074d44d241f46aa7c9f21ff46653adf617d7f070fbfe327626c989"},"ops":[{"type":3,"timestamp":1795214307,"nonce":"hNkSrKfvHjtc9EyQyFkzb8I7Rcs=","message":"Follows the knowledge metadata and KyuGraph projection work in af5e85a7d37b1f7b459064108b6797a39ae2b11f45eaa947e2cc8406174b0146.","files":null}]}
