@@ -1,10 +1,11 @@
 {
   "name": "hxn-file",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Asynchronous files, application persistence and remote URI I/O for Haxe",
   "url": "https://github.com/hx-n/hxn-assets",
   "license": "Apache",
+  "tags": ["hxcpp", "hashlink", "native", "cross", "wasm"],
   "contributors": ["darmie"],
-  "releasenote": "Asynchronous bundled files, saves and preferences across native, mobile and browser runtimes.",
-  "dependencies": { "hxn": "0.3.9" }
+  "releasenote": "Updated platform bindings for hxn 0.3.10 and the embedded assets graph release.",
+  "dependencies": { "hxn": "0.3.10" }
 }
