@@ -1,0 +1,78 @@
+{
+  "hxn": 1,
+  "library": "assets_jit",
+  "package": "hxn.assets.native",
+  "interfaces": [
+    {
+      "name": "GraphBackend",
+      "docs": "Internal generated binding; applications use hxn.assets.KnowledgeGraph.",
+      "shared": true,
+      "methods": [
+        {
+          "name": "new",
+          "kind": "constructor",
+          "params": [],
+          "returns": "GraphBackend",
+          "fallible": false,
+          "blocking": false
+        },
+        {
+          "name": "initialize",
+          "kind": "method",
+          "params": [{ "name": "directory", "type": "str" }],
+          "returns": "future<void>",
+          "fallible": false,
+          "blocking": false
+        },
+        {
+          "name": "apply_json",
+          "kind": "method",
+          "params": [{ "name": "batch", "type": "str" }],
+          "returns": "future<void>",
+          "fallible": false,
+          "blocking": false
+        },
+        {
+          "name": "query_json",
+          "kind": "method",
+          "params": [{ "name": "query", "type": "str" }, { "name": "parameters", "type": "str" }],
+          "returns": "future<str>",
+          "fallible": false,
+          "blocking": false
+        },
+        {
+          "name": "initialize_snapshot",
+          "kind": "method",
+          "params": [{ "name": "bytes", "type": "bytes" }],
+          "returns": "future<void>",
+          "fallible": false,
+          "blocking": false
+        },
+        {
+          "name": "snapshot",
+          "kind": "method",
+          "params": [],
+          "returns": "future<bytes>",
+          "fallible": false,
+          "blocking": false
+        },
+        {
+          "name": "jit_enabled",
+          "kind": "method",
+          "params": [],
+          "returns": "bool",
+          "fallible": false,
+          "blocking": false
+        },
+        {
+          "name": "shutdown",
+          "kind": "method",
+          "params": [],
+          "returns": "future<void>",
+          "fallible": false,
+          "blocking": false
+        }
+      ]
+    }
+  ]
+}

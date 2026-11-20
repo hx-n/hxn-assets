@@ -50,6 +50,8 @@ def main():
             if runtime == "hl":
                 flags += ["--vm", options.ash]
         run([options.cli, "check", runtime, *flags], ROOT / "packages/hxn-file")
+        for graph in (("packages/hxn-assets", "adapters/kyugraph-jit") if options.mode == "native" else ("packages/hxn-assets",)):
+            run([options.cli, "check", runtime, *flags], ROOT / graph)
         run([sys.executable, ROOT / "tests/assets/runtimes.py", mode, *common])
         run([sys.executable, ROOT / "tests/assets/remote.py", mode, *common])
 

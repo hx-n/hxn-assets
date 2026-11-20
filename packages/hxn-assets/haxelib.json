@@ -1,17 +1,17 @@
 {
   "name": "hxn-assets",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "license": "Apache",
   "url": "https://github.com/hx-n/hxn-assets",
   "description": "Typed assets, asynchronous loading and semantic knowledge metadata",
   "contributors": [
     "darmie"
   ],
-  "releasenote": "Typed asset declarations, remote streams and opt-in knowledge metadata.",
+  "releasenote": "Packaged embedded graph with selectable JIT and portable checkpoints.",
   "classPath": "src",
   "dependencies": {
-    "hxn": "0.3.9",
-    "hxn-file": "0.1.0",
+    "hxn": "0.3.10",
+    "hxn-file": "0.2.0",
     "format": "3.8.0"
   },
   "hxn": {

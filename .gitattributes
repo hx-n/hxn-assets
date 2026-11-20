@@ -1,3 +1,4 @@
 * text=auto eol=lf
 *.png binary
 **/third-party/licenses/** -text -whitespace
+**/third-party/native/licenses/** -text -whitespace

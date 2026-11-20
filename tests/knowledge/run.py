@@ -17,7 +17,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--hxn", type=Path, default=ROOT.parent / "hxn")
     parser.add_argument("--ash", default="ash")
-    parser.add_argument("--adapter", action="store_true", help="run the optional published-crate KyuGraph adapter")
+    parser.add_argument("--adapter", action="store_true", help="run projection replay against the pinned embedded KyuGraph engine")
     parser.add_argument("--kyugraph", type=Path, help="run the adapter against this local KyuGraph checkout")
     args = parser.parse_args()
     common = ["haxe", "-cp", args.hxn / "haxe", "-cp", ROOT / "packages/hxn-assets/src", "-lib", "format:3.8.0"]
@@ -100,7 +100,7 @@ def main():
             manifest = adapter/"Cargo.toml"
             if args.kyugraph:
                 manifest = work/"Cargo.toml"
-                manifest.write_text('[package]\nname="hxn-knowledge-local-check"\nversion="0.0.0"\nedition="2024"\n[workspace]\n[dependencies]\nhxn-assets-kyugraph={path='+json.dumps(str(adapter))+'}\nkyu-graph="=0.4.0"\nserde_json="1"\n[patch.crates-io]\nkyu-graph={path='+json.dumps(str(args.kyugraph.resolve()/"crates/kyu-graph"))+'}\n')
+                manifest.write_text('[package]\nname="hxn-knowledge-local-check"\nversion="0.0.0"\nedition="2024"\n[workspace]\n[dependencies]\nhxn-assets-kyugraph={path='+json.dumps(str(adapter))+'}\nkyu-graph={path='+json.dumps(str(args.kyugraph.resolve()/"crates/kyu-graph"))+',default-features=false,features=["jit"]}\nserde_json="1"\n[patch."https://github.com/offbit-ai/kyugraph.git"]\nkyu-graph={path='+json.dumps(str(args.kyugraph.resolve()/"crates/kyu-graph"))+'}\n')
                 source = work/"src";source.mkdir()
                 shutil.copy2(adapter/"examples/replay.rs",source/"main.rs")
             command = ["cargo","run","--manifest-path",manifest,"--target-dir",ROOT/"target/knowledge-kyugraph","--config",'build.rustflags=["-C", "symbol-mangling-version=v0"]']

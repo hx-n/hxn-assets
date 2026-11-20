@@ -1,12 +1,13 @@
-//! Optional native/server-side sink for the portable Haxe knowledge wire format.
+//! Projection core for the installed Haxe knowledge API.
 //!
 //! The caller owns scheduling, authorization and the database connection. This
-//! crate is outside the portable file/assets workspace and starts no app threads.
+//! crate supplies graph updates; the hxn-assets binding owns its scheduling.
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::error::Error;
 use std::fmt;
 
-use kyu_graph::{Connection, DeltaBatchBuilder, TypedValue};
+use kyu_graph::DeltaBatchBuilder;
+pub use kyu_graph::{Connection, Database, QueryResult, TypedValue};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use sha2::{Digest, Sha256};
@@ -623,3 +624,6 @@ fn typed_value(value: Value, kind: &str) -> TypedValue {
     }
     TypedValue::from(value)
 }
+
+/// Whether this build enables native expression compilation.
+pub const JIT_ENABLED: bool = cfg!(feature = "jit");

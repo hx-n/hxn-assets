@@ -15,8 +15,34 @@ class Tool {
 			final args:Array<String> = request.arguments;
 			final command = args.shift();
 			if (command == null || command == "help" || command == "--help") {
+				Sys.println("hxn assets build [--jit | --no-jit] <haxe arguments or app.hxml>");
 				Sys.println("hxn assets catalog --source <directory> --out <catalog.json> [--content-addressed]");
 				Sys.println("hxn assets stage --source <directory> --out <directory> [--content-addressed]");
+				return;
+			}
+			if (command == "build") {
+				var jit:Null<Bool> = null;
+				final compiler:Array<String> = ["-lib", "hxn-assets"];
+				for (arg in args)
+					switch (arg) {
+						case "--jit":
+							if (jit == false)
+								throw "choose --jit or --no-jit";
+							jit = true;
+						case "--no-jit":
+							if (jit == true)
+								throw "choose --jit or --no-jit";
+							jit = false;
+						case _:
+							compiler.push(arg);
+					}
+				if (compiler.length == 2)
+					throw "build needs Haxe arguments or an hxml file";
+				if (jit != null) {
+					compiler.push("-D");
+					compiler.push("hxn_assets_jit=" + (jit ? "on" : "off"));
+				}
+				Sys.exit(Sys.command("haxe", compiler));
 				return;
 			}
 			var source = "assets",

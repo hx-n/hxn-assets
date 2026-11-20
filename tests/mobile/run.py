@@ -26,10 +26,14 @@ def main():
     parser.add_argument("--hxn", type=Path, default=ROOT.parent / "hxn")
     parser.add_argument("--cli", type=Path)
     parser.add_argument("--ash", default="ash")
+    parser.add_argument("--graph", action="store_true", help="run the embedded graph and cross-process checkpoints")
+    parser.add_argument("--jit", action="store_true", help="select the graph JIT build on Android")
     args = parser.parse_args()
+    if args.jit and (not args.graph or args.platform == "ios-sim"):
+        parser.error("--jit requires --graph on Android")
     ios = args.platform == "ios-sim"
     target = ("aarch64-apple-ios-sim" if args.runtime == "hl" else "x86_64-apple-ios") if ios else "aarch64-linux-android"
-    work = ROOT / "target/mobile" / (args.platform + "-" + args.runtime)
+    work = ROOT / "target/mobile" / (args.platform + "-" + args.runtime + ("-graph-jit" if args.jit else "-graph" if args.graph else ""))
     work.mkdir(parents=True, exist_ok=True)
     env = os.environ.copy()
     cli = str(args.cli or args.hxn / "target/debug/hxn")
@@ -59,6 +63,10 @@ def main():
 
     package = work / "package"
     run([cli, "package", args.runtime, "--target", target, "--release", "--out", package], cwd=ROOT / "packages/hxn-file")
+    graph_package = work / "graph-package"
+    graph_name = "assets_jit" if args.jit else "assets"
+    if args.graph:
+        run([cli, "package", args.runtime, "--target", target, "--release", "--out", graph_package], cwd=ROOT / ("adapters/kyugraph-jit" if args.jit else "packages/hxn-assets"))
     # The test JNI host and backend use one Cargo dependency graph for ndk-context.
     if not ios:
         crate = ROOT / "target/hxn/file" / (args.runtime + "-" + target) / "crate"
@@ -74,7 +82,7 @@ def main():
 
     spec = importlib.util.spec_from_file_location("remote_fixture", ROOT / "tests/assets/remote.py")
     remote = importlib.util.module_from_spec(spec); spec.loader.exec_module(remote)
-    appid = "dev.hxn.assets.check." + args.runtime
+    appid = "dev.hxn.assets.check." + args.runtime + (".graph" if args.graph else "")
     adb = [str(sdk / "platform-tools/adb"), "-s", args.device]
     with remote.fixture() as (remote_dir, ports):
         assets = work / "input-assets"
@@ -83,11 +91,15 @@ def main():
         (assets / "test-run.txt").write_text(nonce)
         out = work / "out"; out.mkdir(exist_ok=True)
         flags = ["haxe", "-lib", "format:3.8.0", "-cp", args.hxn / "haxe", "-cp", package, package / "extraParams.hxml", "-cp", ROOT / "packages/hxn-assets/src", "-cp", ROOT / "tests/assets", "-cp", ROOT / "examples/knowledge", "-cp", MOBILE, "-cp", remote_dir, "--macro", "hxn.assets.Build.register()", "-D", "hxn_assets_dir=" + str(assets), "-D", "hxn_triple=" + target, "-D", "hxn_file_mobile", "-resource", str(assets / "test-run.txt") + "@mobile-nonce", "-main", "MobileCheck"]
+        if args.graph:
+            flags += ["-cp", graph_package, graph_package / "extraParams.hxml", "-cp", ROOT / "tests/knowledge-native", "-D", "hxn_graph_check", "-D", "hxn_assets_jit=" + ("on" if args.jit else "off")]
         if not ios: flags += ["-D", "hxn_mobile_android"]
         if args.runtime == "hl":
             run([*flags, "-hl", out / "main.hl"])
             extra = {"ASH_LINK_ARGS": "-framework Foundation -liconv -lobjc" if ios else "--target=aarch64-linux-android26 -shared -Wl,-soname,libhxn_asset_check.so -landroid -llog"}
             native = ["--native-lib", out / "libfile.a"]
+            if args.graph:
+                native += ["--native-lib", out / ("lib" + graph_name + ".a")]
             if not ios:
                 run([tools / "aarch64-linux-android26-clang", "-fPIC", "-c", MOBILE / "android/host.c", "-o", out / "host.o"])
                 native += ["--native-lib", out / "host.o"]
@@ -95,16 +107,17 @@ def main():
         else:
             if ios:
                 # libtool builds an archive; SDK dylibs are linked by the final app host.
-                original = ET.parse(package / "native" / target / "link.xml").getroot()
-                for node in original.iter("lib"):
-                    name = node.get("name", "")
-                    if name.startswith("-l"):
-                        node.tag = "flag"; node.attrib = {"value": "-ref-" + name[1:]}
-                for node in original.iter("flag"):
-                    if node.get("value") == "-framework": node.set("value", "-ref-framework")
-                deferred = work / "archive-link.xml"
-                ET.ElementTree(original).write(deferred, encoding="unicode")
-                flags += ["--macro", "haxe.macro.Compiler.define(\"FILE_LINK\", " + json.dumps(str(deferred)) + ")"]
+                for library, directory in [("file", package)] + ([(graph_name, graph_package)] if args.graph else []):
+                    original = ET.parse(directory / "native" / target / "link.xml").getroot()
+                    for node in original.iter("lib"):
+                        name = node.get("name", "")
+                        if name.startswith("-l"):
+                            node.tag = "flag"; node.attrib = {"value": "-ref-" + name[1:]}
+                    for node in original.iter("flag"):
+                        if node.get("value") == "-framework": node.set("value", "-ref-framework")
+                    deferred = work / (library + "-archive-link.xml")
+                    ET.ElementTree(original).write(deferred, encoding="unicode")
+                    flags += ["--macro", "haxe.macro.Compiler.define(" + json.dumps(library.upper() + "_LINK") + ", " + json.dumps(str(deferred)) + ")"]
                 defines = ["-D", "iphonesim", "-D", "HXCPP_M64", "-D", "HXCPP_IOS_MIN_VERSION=12.0"]
             else:
                 run([tools / "aarch64-linux-android26-clang", "-fPIC", "-DHXN_CHECK_CPP", "-c", MOBILE / "android/host.c", "-o", out / "host.o"])
@@ -152,7 +165,8 @@ def main():
                 for port in ports:
                     run([*adb, "reverse", "tcp:" + str(port), "tcp:" + str(port)])
                     forwarded.append(port)
-            for suite, expected in [("storage", "PASS: mobile assets write " + nonce), ("storage", "PASS: mobile assets reopen " + nonce), ("remote", "PASS: mobile remote " + nonce)]:
+            cases = [("storage", "PASS: mobile graph write " + nonce), ("storage", "PASS: mobile graph reopen " + nonce)] if args.graph else [("storage", "PASS: mobile assets write " + nonce), ("storage", "PASS: mobile assets reopen " + nonce), ("remote", "PASS: mobile remote " + nonce)]
+            for suite, expected in cases:
                 if ios:
                     output = run(["xcrun", "simctl", "launch", "--console", "--terminate-running-process", args.device, appid], timeout=90, capture=True, extra={"SIMCTL_CHILD_HXN_ASSET_SUITE":suite})
                 else:
@@ -172,7 +186,7 @@ def main():
                 run([*adb, "uninstall", appid], check=False)
                 for port in forwarded: run([*adb, "reverse", "--remove", "tcp:" + str(port)], check=False)
     log.close()
-    print("PASS:", args.platform, args.runtime, "bundle/APK, relaunch persistence, shared logs, HTTP/WS/WSS", flush=True)
+    print("PASS:", args.platform, args.runtime, ("graph JIT=" + str(args.jit) + ", concurrent queries and cross-process checkpoints") if args.graph else "bundle/APK, relaunch persistence, shared logs, HTTP/WS/WSS", flush=True)
 
 
 if __name__ == "__main__":

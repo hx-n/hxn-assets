@@ -8,10 +8,10 @@ import Models;
 class KnowledgeExample {
 	public static final namespace = "campaign/one";
 
-	public static function run():Future<Array<KnowledgeBatch>> {
+	public static function run(?destination:KnowledgeSink):Future<Array<KnowledgeBatch>> {
 		final memory = new MemoryKnowledgeSink();
 		final batches:Array<KnowledgeBatch> = [];
-		final sink:KnowledgeSink = new RecordingSink(memory, batches);
+		final sink:KnowledgeSink = new RecordingSink(memory, batches, destination);
 		final knowledge = new Knowledge(namespace, "game", sink);
 		final north:World = {id: "north", name: "Northern valley"};
 		final dream:World = {id: "dream", name: "Dream world"};
@@ -153,14 +153,16 @@ class KnowledgeExample {
 private class RecordingSink implements KnowledgeSink {
 	final memory:MemoryKnowledgeSink;
 	final batches:Array<KnowledgeBatch>;
+	final destination:Null<KnowledgeSink>;
 
-	public function new(memory:MemoryKnowledgeSink, batches:Array<KnowledgeBatch>) {
+	public function new(memory:MemoryKnowledgeSink, batches:Array<KnowledgeBatch>, ?destination:KnowledgeSink) {
 		this.memory = memory;
 		this.batches = batches;
+		this.destination = destination;
 	}
 
 	public function apply(batch:KnowledgeBatch):Future<Unit>
-		return memory.apply(batch).map(_ -> {
+		return memory.apply(batch).flatMap(_ -> destination == null ? Future.resolved(Unit.Nothing) : destination.apply(batch)).map(_ -> {
 			batches.push(batch);
 			return Unit.Nothing;
 		});

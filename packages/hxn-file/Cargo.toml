@@ -14,7 +14,7 @@ name = "hxn_file"
 library = "file"
 haxelib = "hxn-file"
 contributors = ["darmie"]
-releasenote = "Scoped bundled files, saves, preferences and HTTP(S)/WS(S) I/O on desktop, mobile and browser runtimes, with shared hxn logging."
+releasenote = "Updated platform bindings for hxn 0.3.10 and the embedded assets graph release."
 haxe = "../../tests/check"
 init = ["hxn.file.Init.register()"]
 haxe-flags = ["-D", "hxn_assets_dir=../../tests/fixtures/assets"]

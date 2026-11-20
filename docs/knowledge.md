@@ -133,14 +133,70 @@ these captured-data budgets. Size the application heap for live values plus
 JSON encoding. Emscripten applications can enable HXCPP_LINK_MEMORY_GROWTH
 through their Haxe configuration.
 
-## Native KyuGraph adapter
+## Embedded graph
 
 KnowledgeSink.apply returns hxn.Future<Unit>. KnowledgeBatch.toJson produces
 version-1 UTF-8 JSON. The data() method gives providers detached values. Sinks preserve
 replacement, ownership, schema validation, replay and tombstones.
 
-The optional Rust component under adapters/kyugraph accepts that JSON through
-KnowledgeAdapter::apply_json. It generates typed tables and uses DeltaBatchBuilder
+The normal hxn-assets haxelib includes prebuilt KyuGraph binaries and the
+`hxn.assets.KnowledgeGraph` facade. No Rust compiler or separate backend package
+is required. Opening a graph returns a future. Pass that graph to Knowledge as
+its sink, then execute Cypher with named parameters:
+
+```haxe
+KnowledgeGraph.open().flatMap(graph -> {
+    final knowledge = new Knowledge("campaign/one", "game", graph);
+    return knowledge.publish(1, [Knowledge.capture(npc)])
+        .flatMap(_ -> graph.query(
+            "MATCH (n:Npc) WHERE n._hxn_namespace = $scope AND n._hxn_deleted = false RETURN n.id",
+            {scope: "campaign/one"}))
+        .flatMap(result -> {
+            trace(result.rows);
+            return graph.close();
+        });
+});
+```
+
+Publish related schemas/entities first, as described above. Query results own
+their column names, type names and decoded rows. Values include scalars, nested
+lists/objects and Bytes; 64-bit integers outside the Haxe Int range use haxe.Int64.
+Integers wider than signed 64 bits use decimal strings. Parameters accept Haxe
+scalars, haxe.Int64, Bytes, lists and anonymous objects. Bind values as parameters.
+
+`KnowledgeGraph.open()` creates an in-memory graph on every platform.
+`open(directory)` additionally supports native filesystem persistence. Browser
+code uses memory graphs with `save(storage, path)` and `load(storage, path)` for
+application-scoped IndexedDB persistence. `snapshot()` and `restore(bytes)` use
+the same versioned checkpoint format without filesystem access. Saves are
+explicit, not automatic after publication. Checkpoints are compatible between
+scalar and JIT builds of the same format. Await outstanding work before close;
+close rejects new work and releases the native handle after shutdown.
+
+Use `hxn assets build --jit app.hxml` or `hxn assets build --no-jit app.hxml` to
+choose the installed engine. Without a flag, the compiler selects JIT where
+available and scalar otherwise. Direct Haxe builds use `-D hxn_assets_jit=on`,
+`off` or `auto`. Desktop and Android packages include both builds. iOS and wasm
+use scalar/vectorized evaluation; an explicit unsupported JIT request fails
+with a target-specific message. These flags control KyuGraph, independently of
+Ash's own execution mode. CPPIA scripts must match their native host's selection.
+The graph's `jit` property reports the actual selected build.
+
+Emscripten graph programs use an 8 MiB native stack for parsing and evaluation.
+KnowledgeGraph adds the link setting when used; byte-only asset programs keep
+their existing stack policy. Override with the Haxe define
+`hxn_assets_stack_size=<bytes>` when configuring the application. This is
+independent of heap growth and of the JIT build choice.
+
+Each graph allows eight pending operations. Inputs are copied before returning
+futures. Native CPU work is serialized on worker tasks; a non-threaded wasm build
+runs CPU work synchronously without starting threads. Keep expensive queries out
+of latency-sensitive paths. Query text is limited to 64 KiB, parameters to
+256 KiB/64 bindings (names and object field names up to 256 characters), results to 1024 rows/64 columns and 1 MiB of encoded values,
+and checkpoints to 64 MiB. Result limits do not bound engine intermediate work.
+
+The internal projection component under adapters/kyugraph accepts batch JSON
+through KnowledgeAdapter::apply_json. It generates typed tables and uses DeltaBatchBuilder
 for graph updates and the stored source revision in one delta. A delta is a
 group of changes applied together. Replaying an accepted batch leaves the graph
 unchanged. The adapter ignores older revisions. It rejects equal revisions that
@@ -156,10 +212,10 @@ identifiers.
 Scalar arrays use JSON text in STRING columns because KyuGraph 0.4 Cypher DDL
 cannot declare list columns. Use related entities for queryable collection members.
 
-Run the adapter off the render/event thread and serialize writes per database.
-Namespaces organize data. They do not authorize access. This independent native
-Cargo workspace is not linked into the haxelib/browser/mobile package. Connected
-applications provide a KnowledgeSink transport and an authorized endpoint.
+The facade serializes operations per database. Namespaces organize data; they do
+not authorize access. Connected applications can provide a KnowledgeSink
+transport and an authorized endpoint. The embedded API does not implement
+remote hosting, synchronization or CRDT merging.
 
 See the [runnable model/scenario](../examples/knowledge/README.md) and
 [KyuGraph query](../adapters/kyugraph/examples/replay.rs) combining lore, progress,

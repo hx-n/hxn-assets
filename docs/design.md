@@ -1,8 +1,9 @@
 # Design
 
 This monorepo separates platform I/O (`packages/hxn-file`) from asset metadata
-and byte loading (`packages/hxn-assets`). hxn-file pins hxn 0.3.9 for generated
-bindings; hxn-assets is Haxe and uses those bindings through `FileSource`.
+and byte loading (`packages/hxn-assets`). hxn-file pins hxn 0.3.10 for generated
+bindings. hxn-assets uses those bindings through `FileSource` and includes its
+own native embedded KyuGraph binding. Both haxelibs install prebuilt artifacts.
 
 ## File ownership and persistence
 
@@ -127,8 +128,12 @@ from byte loading; providers acquire no graph or service dependency.
 ## Knowledge metadata
 
 [Knowledge metadata](knowledge.md) describes typed identities, selected facts,
-relationships, spatial bounds and versioned sink publication. Its optional
-native KyuGraph adapter is separate from the portable Haxe package.
+relationships, spatial bounds and versioned sink publication. The installed
+`KnowledgeGraph` is both a Cypher query API and a KnowledgeSink. Projection is
+opt-in through metadata and explicit publication; the engine is part of the
+normal hxn-assets dependency. The internal adapter preserves source revisions
+and tombstones. Browser graphs run in memory and save portable checkpoints
+through hxn-file IndexedDB; mobile uses the same API with platform storage.
 
 ## Remote values and streams
 
@@ -216,5 +221,11 @@ output directory outside the source tree.
 
 The hxn-assets haxelib declares the `assets` namespace in `hxn.cli` metadata.
 Its Haxe tool accepts the version-1 command request and implements `catalog` and
-`stage`. Consumers invoke it through hxn using an installed haxelib. Test hosts
+`stage`, plus `build [--jit|--no-jit] <Haxe arguments or app.hxml>`. The build
+command invokes Haxe and selects prebuilt graph binaries. Default selection uses
+JIT where that platform variant is installed, otherwise scalar/batch evaluation.
+Explicit JIT on an unsupported target fails at compilation. The compiler init
+macro selects the same variant for direct Haxe builds using
+`-D hxn_assets_jit=on|off|auto`. CPPIA scripts and their native hosts must use the
+same selection. Consumers invoke it through hxn using an installed haxelib. Test hosts
 and fixtures are separate from this public tool.

@@ -3,6 +3,10 @@ on:
   push:
     tags: ["v*"]
   workflow_dispatch:
+env:
+  CARGO_PROFILE_DEV_DEBUG: "0"
+  CARGO_INCREMENTAL: "0"
+  CARGO_BUILD_JOBS: "2"
 permissions:
   contents: read
 defaults:
@@ -12,19 +16,19 @@ jobs:
   package:
     name: package, ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 60
+    timeout-minutes: 90
     strategy:
       fail-fast: false
       matrix:
         include:
-          - { os: ubuntu-latest, name: linux-x86_64 }
-          - { os: ubuntu-24.04-arm, name: linux-aarch64 }
-          - { os: macos-latest, name: macos-aarch64 }
-          - { os: windows-latest, name: windows-x86_64 }
-          - { os: macos-latest, name: macos-x86_64, runtimes: cpp, target: x86_64-apple-darwin }
+          - { os: ubuntu-latest, name: linux-x86_64, jit: true }
+          - { os: ubuntu-24.04-arm, name: linux-aarch64, jit: true }
+          - { os: macos-latest, name: macos-aarch64, jit: true }
+          - { os: windows-latest, name: windows-x86_64, jit: true }
+          - { os: macos-latest, name: macos-x86_64, runtimes: cpp, target: x86_64-apple-darwin, jit: true }
           - { os: macos-latest, name: ios, runtimes: hl cpp, target: aarch64-apple-ios }
           - { os: macos-latest, name: ios-simulator, runtimes: hl cpp, target: aarch64-apple-ios-sim }
-          - { os: ubuntu-latest, name: android, runtimes: hl cpp, target: aarch64-linux-android }
+          - { os: ubuntu-latest, name: android, runtimes: hl cpp, target: aarch64-linux-android, jit: true }
           - { os: ubuntu-latest, name: ash-wasm-threads, runtimes: hl, wasm: true, threads: true }
           - { os: ubuntu-latest, name: emcc-wasm, runtimes: cpp, wasm: true, emcc: true }
           - { os: ubuntu-latest, name: emcc-wasm-threads, runtimes: cpp, wasm: true, threads: true, emcc: true }
@@ -34,6 +38,9 @@ jobs:
         with:
           runtime: package
       - run: python3 scripts/third_party_notices.py --output packages/hxn-file/third-party --check
+      - run: python3 scripts/third_party_notices.py --output packages/hxn-assets/third-party/native --check
+      - if: runner.os == 'macOS'
+        run: echo "MACOSX_DEPLOYMENT_TARGET=11.0" >> "$GITHUB_ENV"
       - if: matrix.target
         run: rustup target add ${{ matrix.target }}
       - if: matrix.name == 'android'
@@ -48,11 +55,10 @@ jobs:
           git clone --depth 1 https://github.com/emscripten-core/emsdk "$RUNNER_TEMP/emsdk"
           "$RUNNER_TEMP/emsdk/emsdk" install 5.0.7
           "$RUNNER_TEMP/emsdk/emsdk" activate 5.0.7
-      - name: Package native bindings
-        working-directory: packages/hxn-file
+      - name: Package file and graph bindings
         run: |
           if [ -f "$RUNNER_TEMP/emsdk/emsdk_env.sh" ]; then source "$RUNNER_TEMP/emsdk/emsdk_env.sh"; fi
-          hxn package ${{ matrix.runtimes || 'hl cpp' }} --release ${{ matrix.target && format('--target {0}', matrix.target) || '' }} ${{ matrix.wasm && '--wasm' || '' }} ${{ matrix.threads && '--threads' || '' }} --out ../../target/release-part
+          python3 tests/release/build.py --runtimes ${{ matrix.runtimes || 'hl cpp' }} ${{ matrix.target && format('--target {0}', matrix.target) || '' }} ${{ matrix.wasm && '--wasm' || '' }} ${{ matrix.threads && '--threads' || '' }} ${{ matrix.jit && '--jit' || '' }}
       - uses: actions/upload-artifact@v4
         with:
           name: package-${{ matrix.name }}
@@ -75,7 +81,7 @@ jobs:
     name: installed, ${{ matrix.os }}
     needs: haxelibs
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 60
+    timeout-minutes: 90
     strategy:
       fail-fast: false
       matrix:
@@ -94,7 +100,7 @@ jobs:
     name: installed, ${{ matrix.mode }}, Chrome
     needs: haxelibs
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 90
     strategy:
       fail-fast: false
       matrix:

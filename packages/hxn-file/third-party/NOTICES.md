@@ -33,10 +33,10 @@ When redistributing binaries, retain the applicable notices and license texts.
 | hl_abi 0.1.0 | MIT | [LICENSE-MIT](licenses/hl_abi-0.1.0/LICENSE-MIT), [UPSTREAM-MANIFEST.txt](licenses/hl_abi-0.1.0/UPSTREAM-MANIFEST.txt) |
 | http 1.5.0 | MIT OR Apache-2.0 | [LICENSE-APACHE](licenses/http-1.5.0/LICENSE-APACHE), [LICENSE-MIT](licenses/http-1.5.0/LICENSE-MIT) |
 | httparse 1.10.1 | MIT OR Apache-2.0 | [LICENSE-APACHE](licenses/httparse-1.10.1/LICENSE-APACHE), [LICENSE-MIT](licenses/httparse-1.10.1/LICENSE-MIT) |
-| hxn 0.3.9 | Apache-2.0 | [LICENSE](licenses/hxn-0.3.9/LICENSE) |
-| hxn-abi 0.3.9 | Apache-2.0 | [LICENSE](licenses/hxn-abi-0.3.9/LICENSE) |
-| hxn-future 0.3.9 | Apache-2.0 | [LICENSE](licenses/hxn-future-0.3.9/LICENSE) |
-| hxn-macros 0.3.9 | Apache-2.0 | [LICENSE](licenses/hxn-macros-0.3.9/LICENSE) |
+| hxn 0.3.10 | Apache-2.0 | [LICENSE](licenses/hxn-0.3.10/LICENSE) |
+| hxn-abi 0.3.10 | Apache-2.0 | [LICENSE](licenses/hxn-abi-0.3.10/LICENSE) |
+| hxn-future 0.3.10 | Apache-2.0 | [LICENSE](licenses/hxn-future-0.3.10/LICENSE) |
+| hxn-macros 0.3.10 | Apache-2.0 | [LICENSE](licenses/hxn-macros-0.3.10/LICENSE) |
 | hybrid-array 0.4.15 | MIT OR Apache-2.0 | [LICENSE-APACHE](licenses/hybrid-array-0.4.15/LICENSE-APACHE), [LICENSE-MIT](licenses/hybrid-array-0.4.15/LICENSE-MIT) |
 | io-extras 0.19.0 | Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT | [LICENSE-APACHE](licenses/io-extras-0.19.0/LICENSE-APACHE), [LICENSE-Apache-2.0_WITH_LLVM-exception](licenses/io-extras-0.19.0/LICENSE-Apache-2.0_WITH_LLVM-exception), [COPYRIGHT](licenses/io-extras-0.19.0/COPYRIGHT), [LICENSE-MIT](licenses/io-extras-0.19.0/LICENSE-MIT) |
 | io-lifetimes 2.0.4 | Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT | [LICENSE-APACHE](licenses/io-lifetimes-2.0.4/LICENSE-APACHE), [LICENSE-Apache-2.0_WITH_LLVM-exception](licenses/io-lifetimes-2.0.4/LICENSE-Apache-2.0_WITH_LLVM-exception), [COPYRIGHT](licenses/io-lifetimes-2.0.4/COPYRIGHT), [LICENSE-MIT](licenses/io-lifetimes-2.0.4/LICENSE-MIT) |

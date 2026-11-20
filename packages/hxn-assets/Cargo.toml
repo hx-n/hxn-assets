@@ -1,0 +1,31 @@
+[package]
+name = "hxn-assets"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Typed assets and an embedded knowledge graph for Haxe"
+keywords = ["hxcpp", "hashlink", "native", "cross", "wasm"]
+publish = false
+
+[lib]
+name = "hxn_assets"
+path = "native-src/lib.rs"
+
+[package.metadata.hxn]
+library = "assets"
+haxelib = "hxn-assets"
+contributors = ["darmie"]
+releasenote = "Built-in Haxe knowledge graph with JIT and scalar variants."
+haxe = "../../tests/knowledge-native"
+haxe-flags = ["-lib", "hxn:0.3.10", "-lib", "format:3.8.0", "-cp", "../../examples/knowledge", "-D", "hxn_assets_dir=../../examples/knowledge/assets", "-lib", "hxn-file", "-cp", "src"]
+
+[dependencies]
+hxn.workspace = true
+hxn-future.workspace = true
+serde_json.workspace = true
+hxn-assets-kyugraph = { path = "../../adapters/kyugraph", default-features = false }
+
+[features]
+default = []
+jit = ["hxn-assets-kyugraph/jit"]

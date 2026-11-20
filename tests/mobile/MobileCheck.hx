@@ -17,6 +17,31 @@ class MobileCheck {
 			@:privateAccess RemoteCheck.main();
 			return;
 		}
+		#if hxn_graph_check
+		final nonce = haxe.Resource.getString("mobile-nonce");
+		final marker = new Storage("org.hxn.knowledge.example");
+		final expectedJit = #if (hxn_assets_jit == "on") true #else false #end;
+		var phase = "";
+		marker.getPreference("graph-nonce")
+			.flatMap(previous -> {
+				phase = previous.found ? "reopen" : "write";
+				if (previous.found && previous.value != nonce)
+					throw "graph app retained another test's data";
+				return previous.found ? Main.restore(null, expectedJit) : EmbeddedGraphExample.run(null, expectedJit);
+			})
+			.flatMap(_ -> marker.setPreference("graph-nonce", nonce))
+			.then(_ -> {
+				marker.close();
+				Sys.println("PASS: mobile graph " + phase + " " + nonce);
+				#if !hxn_mobile_android
+				hxn.Loop.exit(0);
+				#end
+			}, error -> {
+				Sys.stderr().writeString(Std.string(error) + "\n");
+				hxn.Loop.exit(1);
+			});
+		return;
+		#end
 		hxn.Log.level = Debug;
 		final records:Array<hxn.LogRecord> = [];
 		hxn.Log.sink = record -> records.push(record);

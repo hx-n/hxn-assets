@@ -60,10 +60,24 @@ Knowledge metadata selects typed identities, facts, relationships and world-spac
 bounds from assets and live state. See the
 [lore, progress and NPC example](https://github.com/hx-n/hxn-assets/tree/main/examples/knowledge)
 and [knowledge guide](https://github.com/hx-n/hxn-assets/blob/main/docs/knowledge.md).
-An optional native KyuGraph adapter consumes the same versioned snapshots.
+The included KnowledgeGraph accepts the same versioned snapshots.
 
 ## Logging
 
 Diagnostics use core `hxn.Log` with target `hxn.assets`.
 The application owns `Log.level` and `Log.sink`; frame loops drain native
 records at `hxn.Loop.sync()`, and idle background work uses `Log.flush()`.
+
+## Embedded knowledge graph
+
+`hxn.assets.KnowledgeGraph` is included with prebuilt bindings for desktop,
+mobile and browser targets. Use it as the sink for annotated lore, progress,
+NPC relationships and spatial state, then query through the Haxe Cypher API.
+Save and load portable checkpoints with `hxn.file.Storage`, including browser
+IndexedDB. See the [knowledge guide](https://github.com/hx-n/hxn-assets/blob/main/docs/knowledge.md)
+and [game example](https://github.com/hx-n/hxn-assets/tree/main/examples/knowledge).
+
+Compile with `hxn assets build --jit app.hxml` or `--no-jit` to choose a prebuilt
+engine. The default selects available JIT, otherwise scalar. Desktop and Android
+include both; iOS and wasm use scalar/vectorized queries. Haxe consumers need no
+Rust tooling or extra graph package.

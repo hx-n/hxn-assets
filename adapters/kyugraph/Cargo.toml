@@ -1,15 +1,18 @@
 [package]
 name = "hxn-assets-kyugraph"
-version = "0.1.0"
+version.workspace = true
 edition = "2024"
 license = "Apache-2.0"
 publish = false
-description = "Optional native KyuGraph sink for hxn semantic knowledge batches"
+description = "KyuGraph projection core used by the installed hxn-assets package"
 
-[workspace]
 
 [dependencies]
-kyu-graph = "=0.4.0"
+kyu-graph = { git = "https://github.com/offbit-ai/kyugraph.git", rev = "64f41a248a9ed5d30baf5c04ba551b5cb04f342a", default-features = false }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 sha2 = "0.10"
+
+[features]
+default = ["jit"]
+jit = ["kyu-graph/jit"]

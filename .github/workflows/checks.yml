@@ -25,13 +25,13 @@ jobs:
       - run: python3 -c 'import subprocess; subprocess.run(["cargo", "test", "--workspace", "--locked"], timeout=600, check=True)'
       - run: python3 scripts/third_party_notices.py --output packages/hxn-file/third-party --check
       - run: haxelib install formatter 1.18.0 --always --quiet
-      - run: haxelib run formatter --check -s packages/hxn-file/sources -s packages/hxn-assets/src -s tests/assets -s tests/check -s tests/mobile/MobileCheck.hx -s examples
+      - run: haxelib run formatter --check -s packages/hxn-file/sources -s packages/hxn-assets/src -s tests/assets -s tests/check -s tests/knowledge-native -s tests/release -s tests/mobile/MobileCheck.hx -s examples
       - name: Catalogs, typed payloads, annotations and compiler reuse
         run: python3 tests/assets/run.py --hxn tests/.tools/hxn --ash ash
       - name: Knowledge schemas, full DCE and compiler reuse
         run: python3 tests/knowledge/run.py --hxn tests/.tools/hxn --ash ash
   kyugraph:
-    name: Optional KyuGraph adapter
+    name: Embedded KyuGraph projection
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
@@ -47,7 +47,7 @@ jobs:
         with:
           workspaces: adapters/kyugraph -> ../../target/knowledge-kyugraph
       - run: cargo fmt --manifest-path adapters/kyugraph/Cargo.toml --check
-      - run: python3 scripts/third_party_notices.py --manifest adapters/kyugraph/Cargo.toml --output adapters/kyugraph/third-party --check
+      - run: python3 scripts/third_party_notices.py --output packages/hxn-assets/third-party/native --check
       - name: Real graph queries, revision replay and restart
         run: python3 tests/knowledge/run.py --hxn tests/.tools/hxn --ash ash --adapter
       - run: cargo clippy --manifest-path adapters/kyugraph/Cargo.toml --all-targets --target-dir target/knowledge-kyugraph --locked -- -D warnings
