@@ -117,7 +117,10 @@ macOS and Windows. Browser runs real Chrome pages with Ash wasm and both
 Emscripten threading modes. The pinned hxn checkout lives under tests/.tools, outside restored Cargo target
 caches. All use the pinned hxn source/CLI and bounded
 runtime invocations; failed runtime logs are retained as CI artifacts.
-`tests/ci/run.py` runs each runtime's file, asset and remote checks together.
+`tests/ci/run.py` runs each runtime's file, graph, asset and remote checks together.
+Its source graph fixtures use a file SDK built with the same profile and
+toolchain. The Ash browser fixture explicitly links both native archives.
+Release gates separately install the assembled prebuilt ZIPs with Rust disabled.
 Native fixture runners set the binding directory on the VM loader search path,
 including `PATH` on Windows, matching `hxn check`. Browser profile cleanup is
 best-effort; process exit status and the expected fixture success marker still

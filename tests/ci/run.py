@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+import tomllib
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -33,6 +34,14 @@ def main():
         modes = [options.mode]
     common = ["--hxn", options.hxn.resolve(), "--cli", options.cli, "--ash", options.ash,
               "--chrome", options.chrome]
+    # Source graph fixtures and file bindings share one profile and toolchain.
+    package = ROOT / "target/ci-file-sdk"
+    package_flags = [] if options.mode == "native" else ["--wasm"]
+    if options.mode in ("wasm", "emcc-threads"):
+        package_flags.append("--threads")
+    runtimes = ["hl", "cpp"] if options.mode == "native" else ["hl" if options.mode == "wasm" else "cpp"]
+    run([options.cli, "package", *runtimes, *package_flags, "--out", package], ROOT / "packages/hxn-file")
+    run(["haxelib", "dev", "hxn-file", package])
     for mode in modes:
         if options.mode == "native":
             runtime = mode if mode in ("cpp", "cppia") else "hl"
@@ -51,7 +60,20 @@ def main():
                 flags += ["--vm", options.ash]
         run([options.cli, "check", runtime, *flags], ROOT / "packages/hxn-file")
         for graph in (("packages/hxn-assets", "adapters/kyugraph-jit") if options.mode == "native" else ("packages/hxn-assets",)):
-            run([options.cli, "check", runtime, *flags], ROOT / graph)
+            if mode == "wasm":
+                # The source CLI links its own archive; this composed fixture also needs file.
+                run([options.cli, "build", "hl", "--wasm", "--threads"], ROOT / graph)
+                metadata = tomllib.loads((ROOT / graph / "Cargo.toml").read_text())["package"]["metadata"]["hxn"]
+                out = ROOT / "target/hxn/assets/hl-wasm-threads"
+                run(["haxe", out / "build.hxml", "-cp", ROOT / "tests/knowledge-native", "-main", "Main",
+                     *metadata["haxe-flags"], "-hl", out / "main.hl"], ROOT / graph)
+                libraries = [arg for path in sorted(out.glob("lib*.a")) for arg in ("--native-lib", path)]
+                assert (out / "libfile.a").is_file(), "the composed graph fixture needs its file SDK"
+                run([options.ash, "--build", out / "main.wasm", "--target", "wasm32-wasip1-threads",
+                     *libraries, out / "main.hl"])
+                run(["node", options.hxn / "crates/hxn-cli/src/ash_page.mjs", options.ash, out, options.chrome])
+            else:
+                run([options.cli, "check", runtime, *flags], ROOT / graph)
         run([sys.executable, ROOT / "tests/assets/runtimes.py", mode, *common])
         run([sys.executable, ROOT / "tests/assets/remote.py", mode, *common])
 
