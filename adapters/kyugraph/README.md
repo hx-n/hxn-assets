@@ -1,12 +1,14 @@
 # KyuGraph projection core
 
-This internal Rust component implements version-1 knowledge batch projection
+This internal Rust component implements knowledge batch projection (format
+versions 1 and 2, the latter carrying partial snapshots)
 for the installed hxn-assets KnowledgeGraph API. It belongs to the shared Cargo
 workspace. Haxe consumers use the normal hxn-assets haxelib, which contains its
 prebuilt scalar and supported JIT variants; they do not compile this crate.
 
 KnowledgeAdapter.apply_json updates graph values and source revisions in one
-delta. The facade serializes database operations. Schema changes require
+delta. Node upserts name only the columns a snapshot selects, and relationship
+edges are diffed against the stored targets. The facade serializes database operations. Schema changes require
 explicit migration. Scalar arrays use JSON text STRING columns for KyuGraph
 0.4 DDL. Queries scope namespaces and exclude tombstones. Namespaces do not
 replace application authorization.

@@ -103,9 +103,19 @@ knowledge.publish(1, [
 ```
 
 The Haxe event thread delivers asynchronous results. Publish on that thread.
-Each changed entity supplies a complete selected snapshot. The snapshot
-replaces its facts and outgoing relationships. Repeated
-identities in a batch coalesce to the last value. Publish every referenced
+Each changed entity supplies a snapshot. A complete snapshot from
+`Knowledge.capture` replaces the entity's facts and outgoing relationships. A
+partial snapshot from `Knowledge.captureFields(value, ["goal", "position"])`
+reads the identity and the named Haxe fields only, and replaces only those facts
+and relationships; the others keep their stored values. Selecting the spatial
+field or the relationship naming its world selects both. An entity's first
+publication, and its restoration after a tombstone, must be complete; a partial
+snapshot of an unknown or deleted entity is rejected. A partial snapshot keeps
+the stored asset provenance unless it carries its own.
+
+Repeated identities in a batch coalesce: a complete snapshot or tombstone
+replaces what precedes it, and a partial snapshot merges into it. A partial
+snapshot after its entity's tombstone in the same batch is rejected. Publish every referenced
 semantic type in the initial batch or an earlier batch. A target ID can resolve
 later. Reference queries omit missing or deleted targets. References stay within
 the publication namespace. Sources own entities independently; replacing another
@@ -136,8 +146,13 @@ through their Haxe configuration.
 ## Embedded graph
 
 KnowledgeSink.apply returns hxn.Future<Unit>. KnowledgeBatch.toJson produces
-version-1 UTF-8 JSON. The data() method gives providers detached values. Sinks preserve
-replacement, ownership, schema validation, replay and tombstones.
+UTF-8 JSON: format version 1 when every snapshot is complete, and version 2 when
+the batch carries partial snapshots, each naming its selected facts and
+relationships in `fields`. A version-1 batch is unchanged from earlier releases,
+and a sink that reads only version 1 rejects version 2 rather than misreading
+it. The data() method gives providers detached values; `fields` is absent for a
+complete snapshot. Sinks preserve replacement, partial updates, ownership,
+schema validation, replay and tombstones.
 
 The normal hxn-assets haxelib includes prebuilt KyuGraph binaries and the
 `hxn.assets.KnowledgeGraph` facade. No Rust compiler or separate backend package
@@ -198,7 +213,13 @@ and checkpoints to 64 MiB. Result limits do not bound engine intermediate work.
 The internal projection component under adapters/kyugraph accepts batch JSON
 through KnowledgeAdapter::apply_json. It generates typed tables and uses DeltaBatchBuilder
 for graph updates and the stored source revision in one delta. A delta is a
-group of changes applied together. Replaying an accepted batch leaves the graph
+group of changes applied together. A node upsert names only the columns that
+change, which KyuGraph merges into the stored node: every selected fact for a
+complete snapshot, the selected ones for a partial snapshot. Relationship edges
+are diffed against the stored targets: removed targets are deleted and new ones
+added, so an unchanged edge keeps the revision that created it. The adapter
+reads the owner and links of a batch's entities with one query per semantic
+type. Replaying an accepted batch leaves the graph
 unchanged. The adapter ignores older revisions. It rejects equal revisions that
 contain different data. Ownership and tombstones survive restart. Schema DDL is registered
 separately. A later failure can leave unused tables. The adapter does not

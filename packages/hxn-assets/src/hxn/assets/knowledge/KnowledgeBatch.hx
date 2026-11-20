@@ -26,12 +26,19 @@ class KnowledgeBatch {
 			if (previous != null && previous != definition)
 				throw "conflicting knowledge schema definitions";
 			schemas.set(data.schema.name, definition);
-			selected.set(KnowledgeSnapshot.key(data.schema.name, data.id), data);
+			// Repeated identities coalesce: a partial snapshot merges into the earlier one.
+			final key = KnowledgeSnapshot.key(data.schema.name, data.id), earlier = selected.get(key);
+			selected.set(key, earlier == null ? data : KnowledgeSnapshot.merge(earlier, data));
 		}
 		final keys = [for (key in selected.keys()) key];
 		keys.sort(Reflect.compare);
+		var partial = false;
+		for (data in selected)
+			if (data.fields != null)
+				partial = true;
+		// Version 2 marks a batch carrying partial snapshots; a complete batch stays version 1.
 		final header = Json.stringify({
-			version: 1,
+			version: partial ? 2 : 1,
 			namespace: namespace,
 			source: source,
 			revision: revision
@@ -39,7 +46,7 @@ class KnowledgeBatch {
 		var budget = Bytes.ofString(header).length;
 		final encoded:Array<String> = [];
 		for (key in keys) {
-			final node = Json.stringify(selected.get(key));
+			final node = KnowledgeSnapshot.encode(selected.get(key));
 			budget += Bytes.ofString(node).length + 1;
 			if (budget > 1048576)
 				throw "knowledge batch exceeds 1 MiB";

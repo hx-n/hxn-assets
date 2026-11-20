@@ -40,12 +40,21 @@ class Knowledge {
 		return hxn.assets.macros.KnowledgeMacros.capture(value, false);
 	}
 
+	/**
+		Selects the identity and the named annotated fields only, for a partial update of an
+		entity published complete before. `fields` is an array literal of Haxe field names;
+		the spatial field and the relationship naming its world are selected together.
+	**/
+	public static macro function captureFields(value:haxe.macro.Expr, fields:haxe.macro.Expr):haxe.macro.Expr {
+		return hxn.assets.macros.KnowledgeMacros.capture(value, false, fields);
+	}
+
 	/** Captures the schema and identity for a tombstone; other fields are not read. */
 	public static macro function remove(value:haxe.macro.Expr):haxe.macro.Expr {
 		return hxn.assets.macros.KnowledgeMacros.capture(value, true);
 	}
 
-	/** Publishes a full selected snapshot per changed entity, coalescing repeated identities. */
+	/** Publishes a snapshot per changed entity, complete or partial, coalescing repeated identities. */
 	public function publish(revision:Int, snapshots:Array<KnowledgeSnapshot>):Future<Unit> {
 		if (busy)
 			return Future.rejected(new Exception("knowledge publication is already pending"));

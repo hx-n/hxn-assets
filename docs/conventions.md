@@ -23,8 +23,11 @@ plans, alternatives, measurements and unfinished work in those issues.
 - Canonical filesystem containment uses normalized host separators and directory
   boundaries. Logical asset keys retain their portable forward-slash syntax.
 - Knowledge metadata selects typed identities, facts, relations and spatial data.
-  Generate reads through Knowledge.capture and exclude unannotated state. Sinks
-  replace outgoing links and preserve source revisions, tombstones and replay.
+  Generate reads through Knowledge.capture (complete) or Knowledge.captureFields
+  (partial) and exclude unannotated state. Sinks replace a complete snapshot's
+  facts and outgoing links, update only a partial snapshot's selected ones, and
+  preserve source revisions, tombstones and replay. Keep complete-only batches
+  byte-identical to format version 1.
   Follow the [knowledge contract](knowledge.md); KnowledgeGraph is included in the installed hxn-assets package on desktop,
   mobile and browser targets. Projection remains opt-in through annotations and
   publication; it is not a separate optional dependency. Rebuild typed containers after JSON decoding

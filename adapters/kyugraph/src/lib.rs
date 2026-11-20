@@ -99,6 +99,17 @@ struct Node {
     bounds: Option<Bounds>,
     asset: Option<AssetOrigin>,
     deleted: bool,
+    /// The facts and relationships a partial snapshot selects; absent for a complete one.
+    /// Skipped when absent so a complete batch serializes, and digests, as format version 1.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    fields: Option<Vec<String>>,
+}
+impl Node {
+    fn selects(&self, name: &str) -> bool {
+        self.fields
+            .as_ref()
+            .is_none_or(|fields| fields.iter().any(|field| field == name))
+    }
 }
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -176,7 +187,9 @@ fn valid_value(value: &Value, kind: &str, nullable: bool) -> bool {
 }
 fn validate(batch: &Batch) -> Result<()> {
     require(
-        batch.version == 1 && valid_id(&batch.namespace) && valid_id(&batch.source),
+        (batch.version == 1 || batch.version == 2)
+            && valid_id(&batch.namespace)
+            && valid_id(&batch.source),
         "invalid knowledge protocol or scope",
     )?;
     require(
@@ -198,6 +211,23 @@ fn validate(batch: &Batch) -> Result<()> {
             keys.insert((&schema.name, &node.id)),
             "duplicate knowledge identity in batch",
         )?;
+        if let Some(fields) = &node.fields {
+            let mut unique = BTreeSet::new();
+            require(
+                batch.version == 2
+                    && !node.deleted
+                    && !fields.is_empty()
+                    && fields.iter().all(|field| {
+                        unique.insert(field)
+                            && (schema.facts.iter().any(|fact| &fact.name == field)
+                                || schema
+                                    .relations
+                                    .iter()
+                                    .any(|relation| &relation.name == field))
+                    }),
+                "invalid partial knowledge selection",
+            )?;
+        }
         let mut names = BTreeSet::from([schema.identity.as_str()]);
         for fact in &schema.facts {
             require(
@@ -206,7 +236,7 @@ fn validate(batch: &Batch) -> Result<()> {
                     && sql_type(&fact.kind).is_some(),
                 "invalid knowledge fact schema",
             )?;
-            if !node.deleted {
+            if !node.deleted && node.selects(&fact.name) {
                 require(
                     node.facts
                         .get(&fact.name)
@@ -215,11 +245,16 @@ fn validate(batch: &Batch) -> Result<()> {
                 )?;
             }
         }
+        let selected_facts = schema
+            .facts
+            .iter()
+            .filter(|fact| node.selects(&fact.name))
+            .count();
         require(
             (node.deleted && node.links.is_empty() && node.facts.is_empty())
                 || (!node.deleted
                     && node.links.len() == schema.relations.len()
-                    && node.facts.len() == schema.facts.len()),
+                    && node.facts.len() == selected_facts),
             "knowledge payload differs from schema",
         )?;
         for (index, relation) in schema.relations.iter().enumerate() {
@@ -229,7 +264,12 @@ fn validate(batch: &Batch) -> Result<()> {
                     && names.insert(&relation.name),
                 "invalid knowledge relationship schema",
             )?;
-            if !node.deleted {
+            if !node.deleted && !node.selects(&relation.name) {
+                require(
+                    node.links[index].is_empty(),
+                    "unselected relationship carries targets",
+                )?;
+            } else if !node.deleted {
                 let links = &node.links[index];
                 require(
                     links.len() <= 1024
@@ -244,9 +284,13 @@ fn validate(batch: &Batch) -> Result<()> {
                 )?;
             }
         }
+        let spatial_selected = schema
+            .spatial
+            .as_ref()
+            .is_some_and(|selection| node.selects(&selection.relation));
         require(
             (node.deleted && node.bounds.is_none())
-                || (!node.deleted && schema.spatial.is_some() == node.bounds.is_some()),
+                || (!node.deleted && spatial_selected == node.bounds.is_some()),
             "invalid knowledge spatial selection",
         )?;
         if let Some(selection) = &schema.spatial {
@@ -309,6 +353,13 @@ fn validate(batch: &Batch) -> Result<()> {
     Ok(())
 }
 
+/// What the graph holds for an entity a batch names.
+struct Stored {
+    source: String,
+    links: Vec<Vec<String>>,
+    deleted: bool,
+}
+
 /// The outcome of a source revision, including safe replay and stale delivery.
 #[derive(Debug, PartialEq, Eq)]
 pub enum ApplyOutcome {
@@ -320,6 +371,9 @@ pub enum ApplyOutcome {
 /// A single-writer adapter over an application-owned native KyuGraph connection.
 pub struct KnowledgeAdapter {
     connection: Connection,
+    /// What the last applied delta changed, for tests of its granularity.
+    #[cfg(test)]
+    last: Option<kyu_graph::DeltaStats>,
 }
 impl KnowledgeAdapter {
     pub fn new(connection: Connection) -> Result<Self> {
@@ -346,7 +400,11 @@ impl KnowledgeAdapter {
         connection.query("MATCH (s:`_HxnKnowledgeSchema`) RETURN s.name, s.definition LIMIT 0")?;
         connection
             .query("MATCH (s:`_HxnKnowledgeSource`) RETURN s.key, s.revision, s.digest LIMIT 0")?;
-        Ok(Self { connection })
+        Ok(Self {
+            connection,
+            #[cfg(test)]
+            last: None,
+        })
     }
 
     /// Query with KyuGraph's parameter bindings on the same database.
@@ -430,30 +488,93 @@ impl KnowledgeAdapter {
             )?;
         }
 
+        // One lookup per semantic type, in chunks: the owner, outgoing links and tombstone of each
+        // entity named. Keys are separate parameters: KyuGraph 0.4 matches no rows for `IN` or
+        // `UNWIND` over a list parameter against values written by a delta.
+        let mut by_schema = BTreeMap::<&str, Vec<String>>::new();
+        for node in &batch.nodes {
+            by_schema
+                .entry(&node.schema.name)
+                .or_default()
+                .push(key(&batch.namespace, &node.id));
+        }
+        let mut stored = HashMap::<(String, String), Stored>::new();
+        for (name, keys) in by_schema {
+            for chunk in keys.chunks(64) {
+                let matches: Vec<String> = (0..chunk.len())
+                    .map(|index| format!("n._hxn_key = $k{index}"))
+                    .collect();
+                let bindings: HashMap<String, TypedValue> = chunk
+                    .iter()
+                    .enumerate()
+                    .map(|(index, node_key)| (format!("k{index}"), string(node_key)))
+                    .collect();
+                let found = self.connection.query_with_params(
+                    &format!(
+                        "MATCH (n:{}) WHERE {} RETURN n._hxn_key, n._hxn_source, n._hxn_links, n._hxn_deleted",
+                        quote(name),
+                        matches.join(" OR ")
+                    ),
+                    bindings,
+                )?;
+                for row in found.iter_rows() {
+                    let (
+                        TypedValue::String(node_key),
+                        TypedValue::String(source),
+                        TypedValue::String(links),
+                        TypedValue::Bool(deleted),
+                    ) = (&row[0], &row[1], &row[2], &row[3])
+                    else {
+                        return Err(KnowledgeError("invalid stored knowledge entity".into()));
+                    };
+                    stored.insert(
+                        (name.to_owned(), node_key.to_string()),
+                        Stored {
+                            source: source.to_string(),
+                            links: serde_json::from_str(links)?,
+                            deleted: *deleted,
+                        },
+                    );
+                }
+            }
+        }
+
         let mut delta = DeltaBatchBuilder::new(owner, batch.revision.into());
-        let mut old_links = Vec::new();
         for node in &batch.nodes {
             let schema = &node.schema;
             let node_key = key(&batch.namespace, &node.id);
-            let previous = self.connection.query_with_params(
-                &format!(
-                    "MATCH (n:{}) WHERE n._hxn_key = $key RETURN n._hxn_source, n._hxn_links",
-                    quote(&schema.name)
-                ),
-                params([("key", string(&node_key))]),
-            )?;
-            if previous.num_rows() > 0 {
+            let previous = stored.get(&(schema.name.clone(), node_key.clone()));
+            if let Some(previous) = previous {
                 require(
-                    previous.row(0)[0] == string(&batch.source),
+                    previous.source == batch.source,
                     "knowledge entity belongs to another source",
                 )?;
-                let TypedValue::String(json) = &previous.row(0)[1] else {
-                    return Err(KnowledgeError("invalid stored relationships".into()));
-                };
-                old_links.push(serde_json::from_str::<Vec<Vec<String>>>(json)?);
-            } else {
-                old_links.push(Vec::new());
             }
+            let partial = node.fields.is_some();
+            require(
+                !partial || previous.is_some_and(|previous| !previous.deleted),
+                "a partial knowledge snapshot needs an earlier complete snapshot of the entity",
+            )?;
+            let old_links = previous
+                .map(|previous| previous.links.as_slice())
+                .unwrap_or(&[]);
+            // A partial snapshot keeps the stored targets of the relationships it does not select.
+            let links: Vec<Vec<String>> = if node.deleted {
+                Vec::new()
+            } else {
+                schema
+                    .relations
+                    .iter()
+                    .enumerate()
+                    .map(|(index, relation)| {
+                        if node.selects(&relation.name) {
+                            node.links[index].clone()
+                        } else {
+                            old_links.get(index).cloned().unwrap_or_default()
+                        }
+                    })
+                    .collect()
+            };
             let mut properties = vec![
                 ("_hxn_namespace".into(), string(&batch.namespace)),
                 ("_hxn_source".into(), string(&batch.source)),
@@ -462,32 +583,37 @@ impl KnowledgeAdapter {
                     TypedValue::Int64(batch.revision.into()),
                 ),
                 ("_hxn_deleted".into(), TypedValue::Bool(node.deleted)),
-                (
-                    "_hxn_links".into(),
-                    string(serde_json::to_string(&node.links)?),
-                ),
+                ("_hxn_links".into(), string(serde_json::to_string(&links)?)),
                 (schema.identity.clone(), string(&node.id)),
-                (
+            ];
+            // A partial snapshot without provenance keeps the stored provenance.
+            if !partial || node.asset.is_some() {
+                properties.push((
                     "_hxn_asset_address".into(),
                     node.asset
                         .as_ref()
                         .map(|asset| string(&asset.address))
                         .unwrap_or(TypedValue::Null),
-                ),
-                (
+                ));
+                properties.push((
                     "_hxn_content_id".into(),
                     node.asset
                         .as_ref()
                         .and_then(|asset| asset.content_id.as_ref())
                         .map(string)
                         .unwrap_or(TypedValue::Null),
-                ),
-            ];
-            for fact in &schema.facts {
+                ));
+            }
+            // An upsert names only the columns it changes; KyuGraph keeps the rest.
+            for fact in schema.facts.iter().filter(|fact| node.selects(&fact.name)) {
                 let value = node.facts.get(&fact.name).cloned().unwrap_or(Value::Null);
                 properties.push((fact.name.clone(), typed_value(value, &fact.kind)));
             }
-            if schema.spatial.is_some() {
+            if schema
+                .spatial
+                .as_ref()
+                .is_some_and(|selection| node.selects(&selection.relation))
+            {
                 let bounds = node.bounds.as_ref();
                 properties.push((
                     "_hxn_world".into(),
@@ -511,35 +637,38 @@ impl KnowledgeAdapter {
                     ));
                 }
             }
-            delta = delta.upsert_node(&schema.name, node_key, vec![], properties);
-        }
-        for (node, old) in batch.nodes.iter().zip(old_links) {
-            for (relation, targets) in node.schema.relations.iter().zip(old) {
-                for target in targets {
+            delta = delta.upsert_node(&schema.name, node_key.clone(), vec![], properties);
+            // Only the edges that change: removed targets are deleted and new ones added.
+            for (index, relation) in schema.relations.iter().enumerate() {
+                let before: BTreeSet<&String> = old_links
+                    .get(index)
+                    .map(|targets| targets.iter().collect())
+                    .unwrap_or_default();
+                let after: BTreeSet<&String> = links
+                    .get(index)
+                    .map(|targets| targets.iter().collect())
+                    .unwrap_or_default();
+                for target in before.difference(&after) {
                     delta = delta.delete_edge(
-                        &node.schema.name,
-                        key(&batch.namespace, &node.id),
-                        relation_table(&node.schema.name, relation),
+                        &schema.name,
+                        node_key.clone(),
+                        relation_table(&schema.name, relation),
                         &relation.target,
-                        key(&batch.namespace, &target),
+                        key(&batch.namespace, target),
                     );
                 }
-            }
-            if !node.deleted {
-                for (relation, targets) in node.schema.relations.iter().zip(&node.links) {
-                    for target in targets {
-                        delta = delta.upsert_edge(
-                            &node.schema.name,
-                            key(&batch.namespace, &node.id),
-                            relation_table(&node.schema.name, relation),
-                            &relation.target,
-                            key(&batch.namespace, target),
-                            [
-                                ("_hxn_source", string(&batch.source)),
-                                ("_hxn_revision", TypedValue::Int64(batch.revision.into())),
-                            ],
-                        );
-                    }
+                for target in after.difference(&before) {
+                    delta = delta.upsert_edge(
+                        &schema.name,
+                        node_key.clone(),
+                        relation_table(&schema.name, relation),
+                        &relation.target,
+                        key(&batch.namespace, target),
+                        [
+                            ("_hxn_source", string(&batch.source)),
+                            ("_hxn_revision", TypedValue::Int64(batch.revision.into())),
+                        ],
+                    );
                 }
             }
         }
@@ -552,7 +681,11 @@ impl KnowledgeAdapter {
                 ("digest", string(digest)),
             ],
         );
-        self.connection.apply_delta(delta.build())?;
+        let _stats = self.connection.apply_delta(delta.build())?;
+        #[cfg(test)]
+        {
+            self.last = Some(_stats);
+        }
         Ok(ApplyOutcome::Applied)
     }
 
@@ -627,3 +760,320 @@ fn typed_value(value: Value, kind: &str) -> TypedValue {
 
 /// Whether this build enables native expression compilation.
 pub const JIT_ENABLED: bool = cfg!(feature = "jit");
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    fn schemas() -> (Value, Value, Value) {
+        let lore = json!({"name":"Lore","version":1,"identity":"id","facts":[{"name":"title","kind":"string","nullable":false}],"relations":[],"spatial":null});
+        let world = json!({"name":"World","version":1,"identity":"id","facts":[],"relations":[],"spatial":null});
+        let npc = json!({"name":"Npc","version":1,"identity":"id",
+            "facts":[{"name":"goal","kind":"string","nullable":false},{"name":"name","kind":"string","nullable":false}],
+            "relations":[{"name":"KNOWS","target":"Lore","many":true,"nullable":false},{"name":"IN_WORLD","target":"World","many":false,"nullable":false}],
+            "spatial":{"relation":"IN_WORLD","units":"metre"}});
+        (lore, world, npc)
+    }
+
+    fn bounds(world: &str, x: f64) -> Value {
+        json!({"world":world,"units":"metre","minX":x,"minY":0.0,"minZ":0.0,"maxX":x,"maxY":0.0,"maxZ":0.0})
+    }
+
+    fn node(schema: &Value, id: &str, facts: Value, links: Value, bounds: Value) -> Value {
+        json!({"schema":schema,"id":id,"facts":facts,"links":links,"bounds":bounds,"asset":null,"deleted":false})
+    }
+
+    fn batch(version: u32, revision: u32, nodes: Vec<Value>) -> String {
+        json!({"version":version,"namespace":"campaign","source":"game","revision":revision,"nodes":nodes}).to_string()
+    }
+
+    fn adapter() -> (Database, KnowledgeAdapter) {
+        let database = Database::in_memory();
+        let adapter = KnowledgeAdapter::new(database.connect()).expect("adapter");
+        (database, adapter)
+    }
+
+    fn rows(adapter: &KnowledgeAdapter, query: &str) -> Vec<Vec<TypedValue>> {
+        let result = adapter.connection().query(query).expect("query");
+        result.iter_rows().map(|row| row.to_vec()).collect()
+    }
+
+    /// Lore a and b, worlds north and south, and Npc sage knowing a in north.
+    fn seeded() -> (Database, KnowledgeAdapter, Value) {
+        let (lore, world, npc) = schemas();
+        let (database, mut adapter) = adapter();
+        let first = batch(
+            1,
+            1,
+            vec![
+                node(&lore, "a", json!({"title":"A"}), json!([]), Value::Null),
+                node(&lore, "b", json!({"title":"B"}), json!([]), Value::Null),
+                node(&world, "north", json!({}), json!([]), Value::Null),
+                node(&world, "south", json!({}), json!([]), Value::Null),
+                node(
+                    &npc,
+                    "sage",
+                    json!({"goal":"guard","name":"Mira"}),
+                    json!([["a"], ["north"]]),
+                    bounds("north", 1.0),
+                ),
+            ],
+        );
+        assert_eq!(
+            adapter.apply_json(&first).expect("seed"),
+            ApplyOutcome::Applied
+        );
+        (database, adapter, npc)
+    }
+
+    fn partial(
+        npc: &Value,
+        revision: u32,
+        facts: Value,
+        links: Value,
+        bounds: Value,
+        fields: Value,
+    ) -> String {
+        let mut value = node(npc, "sage", facts, links, bounds);
+        value["fields"] = fields;
+        batch(2, revision, vec![value])
+    }
+
+    #[test]
+    fn partial_snapshot_changes_only_selected_facts() {
+        let (_database, mut adapter, npc) = seeded();
+        let update = partial(
+            &npc,
+            2,
+            json!({"goal":"travel"}),
+            json!([[], []]),
+            Value::Null,
+            json!(["goal"]),
+        );
+        assert_eq!(
+            adapter.apply_json(&update).expect("partial"),
+            ApplyOutcome::Applied
+        );
+        let row = &rows(
+            &adapter,
+            "MATCH (n:Npc) RETURN n.goal, n.name, n._hxn_revision, n._hxn_min_x",
+        )[0];
+        assert_eq!(row[0], string("travel"));
+        assert_eq!(row[1], string("Mira"));
+        assert_eq!(row[2], TypedValue::Int64(2));
+        assert_eq!(row[3], TypedValue::Double(1.0));
+        // The unselected relationship keeps its edge.
+        assert_eq!(
+            rows(
+                &adapter,
+                "MATCH (n:Npc)-[:Npc__KNOWS__Lore]->(l:Lore) RETURN l.id"
+            )
+            .len(),
+            1
+        );
+        assert_eq!(
+            adapter.apply_json(&update).expect("replay"),
+            ApplyOutcome::Replayed
+        );
+    }
+
+    #[test]
+    fn relationship_updates_touch_only_changed_edges() {
+        let (_database, mut adapter, npc) = seeded();
+        let known = |adapter: &KnowledgeAdapter| {
+            let mut ids: Vec<String> = rows(
+                adapter,
+                "MATCH (n:Npc)-[:Npc__KNOWS__Lore]->(l:Lore) RETURN l.id",
+            )
+            .into_iter()
+            .map(|row| format!("{:?}", row[0]))
+            .collect();
+            ids.sort();
+            ids
+        };
+        let update = partial(
+            &npc,
+            2,
+            json!({}),
+            json!([["a", "b"], []]),
+            Value::Null,
+            json!(["KNOWS"]),
+        );
+        adapter.apply_json(&update).expect("add b");
+        assert_eq!(known(&adapter), vec![r#"String("a")"#, r#"String("b")"#]);
+        // Only the new edge is written; the unchanged one and the unselected world are not.
+        let stats = adapter.last.as_ref().expect("stats");
+        assert_eq!(
+            (
+                stats.edges_created,
+                stats.edges_updated,
+                stats.edges_deleted
+            ),
+            (1, 0, 0)
+        );
+        let complete = batch(
+            1,
+            3,
+            vec![node(
+                &npc,
+                "sage",
+                json!({"goal":"guard","name":"Mira"}),
+                json!([["b"], ["north"]]),
+                bounds("north", 1.0),
+            )],
+        );
+        adapter.apply_json(&complete).expect("drop a");
+        assert_eq!(known(&adapter), vec![r#"String("b")"#]);
+        let stats = adapter.last.as_ref().expect("stats");
+        assert_eq!(
+            (
+                stats.edges_created,
+                stats.edges_updated,
+                stats.edges_deleted
+            ),
+            (0, 0, 1)
+        );
+        let links = rows(&adapter, "MATCH (n:Npc) RETURN n._hxn_links");
+        assert_eq!(links[0][0], string(r#"[["b"],["north"]]"#));
+    }
+
+    #[test]
+    fn spatial_value_and_world_move_together() {
+        let (_database, mut adapter, npc) = seeded();
+        let moved = partial(
+            &npc,
+            2,
+            json!({}),
+            json!([[], ["south"]]),
+            bounds("south", 5.0),
+            json!(["IN_WORLD"]),
+        );
+        adapter.apply_json(&moved).expect("move");
+        let row = &rows(
+            &adapter,
+            "MATCH (n:Npc)-[:Npc__IN_WORLD__World]->(w:World) RETURN w.id, n._hxn_world, n._hxn_min_x",
+        )[0];
+        assert_eq!(
+            row,
+            &vec![string("south"), string("south"), TypedValue::Double(5.0)]
+        );
+        let missing = partial(
+            &npc,
+            3,
+            json!({}),
+            json!([[], ["north"]]),
+            Value::Null,
+            json!(["IN_WORLD"]),
+        );
+        assert!(adapter.apply_json(&missing).is_err());
+    }
+
+    #[test]
+    fn partial_snapshots_need_a_live_complete_entity() {
+        let (lore, _, npc) = schemas();
+        let (_database, mut adapter) = adapter();
+        adapter
+            .apply_json(&batch(
+                1,
+                1,
+                vec![node(
+                    &lore,
+                    "a",
+                    json!({"title":"A"}),
+                    json!([]),
+                    Value::Null,
+                )],
+            ))
+            .expect("lore");
+        let unknown = partial(
+            &npc,
+            2,
+            json!({"goal":"x"}),
+            json!([[], []]),
+            Value::Null,
+            json!(["goal"]),
+        );
+        assert!(adapter.apply_json(&unknown).is_err());
+
+        let (_database, mut adapter, npc) = seeded();
+        let mut tombstone = node(&npc, "sage", json!({}), json!([]), Value::Null);
+        tombstone["deleted"] = Value::Bool(true);
+        adapter
+            .apply_json(&batch(1, 2, vec![tombstone]))
+            .expect("delete");
+        assert!(
+            rows(
+                &adapter,
+                "MATCH (n:Npc)-[:Npc__KNOWS__Lore]->(l:Lore) RETURN l.id"
+            )
+            .is_empty()
+        );
+        let after = partial(
+            &npc,
+            3,
+            json!({"goal":"x"}),
+            json!([[], []]),
+            Value::Null,
+            json!(["goal"]),
+        );
+        assert!(adapter.apply_json(&after).is_err());
+    }
+
+    #[test]
+    fn partial_selections_are_validated() {
+        let (_database, mut adapter, npc) = seeded();
+        let mut version1 = node(
+            &npc,
+            "sage",
+            json!({"goal":"x"}),
+            json!([[], []]),
+            Value::Null,
+        );
+        version1["fields"] = json!(["goal"]);
+        assert!(adapter.apply_json(&batch(1, 2, vec![version1])).is_err());
+        for (facts, links, fields) in [
+            (json!({"goal":"x"}), json!([[], []]), json!([])),
+            (
+                json!({"goal":"x"}),
+                json!([[], []]),
+                json!(["goal", "goal"]),
+            ),
+            (json!({"goal":"x"}), json!([[], []]), json!(["unknown"])),
+            (
+                json!({"goal":"x","name":"y"}),
+                json!([[], []]),
+                json!(["goal"]),
+            ),
+            (json!({"goal":"x"}), json!([["b"], []]), json!(["goal"])),
+        ] {
+            assert!(
+                adapter
+                    .apply_json(&partial(&npc, 2, facts, links, Value::Null, fields))
+                    .is_err()
+            );
+        }
+    }
+
+    #[test]
+    fn complete_batches_serialize_as_version_one() {
+        let (_, _, npc) = schemas();
+        let json = batch(
+            1,
+            1,
+            vec![node(
+                &npc,
+                "sage",
+                json!({"goal":"g","name":"n"}),
+                json!([["a"], ["north"]]),
+                bounds("north", 1.0),
+            )],
+        );
+        let parsed: Batch = serde_json::from_str(&json).expect("batch");
+        assert!(
+            !serde_json::to_string(&parsed)
+                .expect("serialize")
+                .contains("\"fields\"")
+        );
+    }
+}

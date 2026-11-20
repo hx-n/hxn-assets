@@ -8,11 +8,52 @@ import haxe.macro.TypeTools;
 
 /** Generates selected-field reads from class/typedef metadata without runtime reflection. */
 class KnowledgeMacros {
-	public static function capture(value:Expr, deleted:Bool):Expr {
+	public static function capture(value:Expr, deleted:Bool, ?selection:Expr):Expr {
 		final typed = Context.typeExpr(value), type = typed.t;
 		final model = declaration(type, value.pos);
 		final fields = model.fields.copy();
 		fields.sort((a, b) -> Reflect.compare(a.name, b.name));
+		// A partial capture reads the identity and the selected fields; the schema stays complete.
+		var chosen:Null<Array<String>> = null;
+		if (selection != null) {
+			chosen = [];
+			switch (selection.expr) {
+				case EArrayDecl(values):
+					for (entry in values) {
+						final name = literal(entry);
+						if (chosen.indexOf(name) >= 0)
+							Context.error('captureFields names $name twice', entry.pos);
+						chosen.push(name);
+					}
+				case _:
+					Context.error("captureFields expects an array literal of field names", selection.pos);
+			}
+			if (chosen.length == 0)
+				Context.error("captureFields selects at least one field", selection.pos);
+			final declared = [for (field in fields) field.name => field];
+			for (name in chosen) {
+				final field = declared.get(name);
+				if (field == null)
+					Context.error('captureFields: ${model.name} has no field $name', selection.pos);
+				if (single(field.meta.get(), ":identity") != null)
+					Context.error("captureFields always reads the identity; name only facts, relations and spatial fields", selection.pos);
+				if ([":fact", ":relation", ":spatial"].filter(meta -> single(field.meta.get(), meta) != null).length == 0)
+					Context.error('captureFields: $name has no knowledge annotation', selection.pos);
+			}
+			// The spatial value and the relationship naming its world are selected together.
+			for (field in fields) {
+				final entry = single(field.meta.get(), ":spatial");
+				if (entry == null || entry.params.length < 1)
+					continue;
+				final world = literal(entry.params[0]);
+				if (chosen.indexOf(field.name) >= 0 && chosen.indexOf(world) < 0)
+					chosen.push(world);
+				if (chosen.indexOf(world) >= 0 && chosen.indexOf(field.name) < 0)
+					chosen.push(field.name);
+			}
+		}
+		final picks = (name:String) -> chosen == null || chosen.indexOf(name) >= 0;
+		final selectedNames:Array<String> = [];
 		final facts:Array<Dynamic> = [], relations:Array<Dynamic> = [];
 		final values:Array<ObjectField> = [], links:Array<Expr> = [], reads:Array<Expr> = [];
 		final locals = new Map<String, Expr>(), relationFields = new Map<String, Dynamic>();
@@ -31,7 +72,7 @@ class KnowledgeMacros {
 			final access:Expr = {expr: EField(macro __hxnKnowledgeValue, field.name), pos: field.pos};
 			final reference:Expr = {expr: EConst(CIdent(local)), pos: field.pos};
 			locals.set(field.name, reference);
-			if (!deleted || name == ":identity")
+			if ((!deleted && picks(field.name)) || name == ":identity")
 				reads.push(macro var $local = $access);
 			switch (name) {
 				case ":identity":
@@ -48,7 +89,10 @@ class KnowledgeMacros {
 					validName(output, entry.pos);
 					final kind = factKind(field.type, field.pos);
 					facts.push({name: output, kind: kind, nullable: nullable(field.type) || field.meta.has(":optional")});
-					values.push({field: output, expr: reference});
+					if (picks(field.name)) {
+						values.push({field: output, expr: reference});
+						selectedNames.push(output);
+					}
 				case ":relation":
 					if (entry.params.length != 1)
 						Context.error("@:relation expects one relationship name", entry.pos);
@@ -61,7 +105,7 @@ class KnowledgeMacros {
 							target = parameters[0];
 						case _:
 					}
-					if (many && !deleted)
+					if (many && !deleted && picks(field.name))
 						reads.push(macro if ($reference != null && $reference.length > 1024) throw "knowledge relationship list exceeds 1024 targets");
 					if (many && nullable(target))
 						Context.error("knowledge relationship arrays require non-null targets", field.pos);
@@ -79,7 +123,12 @@ class KnowledgeMacros {
 					};
 					relations.push(description);
 					relationFields.set(field.name, description);
-					links.push(many ? macro($reference == null ? [] : [for (__id in $reference) (cast __id : String)]) : macro($reference == null ? [] : [(cast $reference : String)]));
+					if (!picks(field.name))
+						links.push(macro []);
+					else {
+						selectedNames.push(output);
+						links.push(many ? macro($reference == null ? [] : [for (__id in $reference) (cast __id : String)]) : macro($reference == null ? [] : [(cast $reference : String)]));
+					}
 				case ":spatial":
 					if (spatial != null)
 						Context.error("only one @:spatial field is supported per knowledge type", field.pos);
@@ -100,6 +149,7 @@ class KnowledgeMacros {
 		}
 		var bounds:Expr = macro null;
 		var spatialSelection:Dynamic = null;
+		final spatialRead = spatial != null && picks(spatial.name);
 		if (spatial != null) {
 			final entry = single(spatial.meta.get(), ":spatial");
 			final world = literal(entry.params[0]);
@@ -136,16 +186,17 @@ class KnowledgeMacros {
 			final position = locals.get(spatial.name);
 			function component(name:String):Expr
 				return components.exists(name) ? {expr: EField(position, name), pos: spatial.pos} : macro 0.0;
-			bounds = macro {
-				world: (cast ${locals.get(world)} : String),
-				units: $v{units},
-				minX: ${component(point ? "x" : "minX")},
-				minY: ${component(point ? "y" : "minY")},
-				minZ: ${component(point ? "z" : "minZ")},
-				maxX: ${component(point ? "x" : "maxX")},
-				maxY: ${component(point ? "y" : "maxY")},
-				maxZ: ${component(point ? "z" : "maxZ")}
-			};
+			if (spatialRead)
+				bounds = macro {
+					world: (cast ${locals.get(world)} : String),
+					units: $v{units},
+					minX: ${component(point ? "x" : "minX")},
+					minY: ${component(point ? "y" : "minY")},
+					minZ: ${component(point ? "z" : "minZ")},
+					maxX: ${component(point ? "x" : "maxX")},
+					maxY: ${component(point ? "y" : "maxY")},
+					maxZ: ${component(point ? "z" : "maxZ")}
+				};
 		}
 		final schema = Context.makeExpr({
 			name: model.name,
@@ -157,12 +208,13 @@ class KnowledgeMacros {
 		}, value.pos);
 		final payload:Expr = {expr: EObjectDecl(values), pos: value.pos};
 		final asset = deleted ? macro null : assetOrigin(typed);
+		final selectedFields:Expr = chosen == null ? macro null : macro $v{selectedNames};
 		final result = macro new hxn.assets.knowledge.KnowledgeSnapshot($schema, ${locals.get(identity)}, ${deleted ? macro {} : payload}, ${
 			deleted ? macro [] : {
 				expr: EArrayDecl(links),
 				pos: value.pos
 			}
-		}, ${deleted ? macro null : bounds}, $asset, $v{deleted});
+		}, ${deleted ? macro null : bounds}, $asset, $v{deleted}, $selectedFields);
 		reads.unshift(macro if (__hxnKnowledgeValue == null) throw "knowledge data must not be null");
 		reads.push(macro return $result);
 		final body:Expr = {expr: EBlock(reads), pos: value.pos};

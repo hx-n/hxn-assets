@@ -39,8 +39,15 @@ class MemoryKnowledgeSink implements KnowledgeSink {
 				final existing = next.get(key);
 				if (existing != null && Json.parse(existing).source != data.source)
 					throw "knowledge entity belongs to another source";
+				// A partial snapshot updates what it selects in the stored, complete entity.
+				var value = node;
+				if (node.fields != null) {
+					if (existing == null)
+						throw "a partial knowledge snapshot needs an earlier complete snapshot of the entity";
+					value = KnowledgeSnapshot.merge(KnowledgeSnapshot.owned(Json.parse(existing).value), node);
+				}
 				next.set(key, Json.stringify({
-					value: node,
+					value: value,
 					namespace: data.namespace,
 					source: data.source,
 					revision: data.revision

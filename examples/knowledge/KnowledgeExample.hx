@@ -100,7 +100,23 @@ class KnowledgeExample {
 			})
 			.flatMap(_ -> {
 				require(candidates(memory).join(",") == "sage", "active progress restores NPC eligibility");
-				return knowledge.publish(6, [Knowledge.remove(GameAssets.Ruin)]);
+				// A partial update publishes only the selected goal; the moved position stays local.
+				sage.goal = "Study the seal";
+				sage.position.x = 1000;
+				return knowledge.publish(6, [Knowledge.captureFields(sage, ["goal"])]);
+			})
+			.flatMap(_ -> {
+				final stored = memory.get(namespace, "Npc", "sage");
+				require(stored.facts.goal == "Study the seal"
+					&& stored.facts.memories.length == 2, "partial update keeps unselected facts");
+				require(stored.bounds.minX == 3 && candidates(memory).join(",") == "sage", "unselected position is not published");
+				// Selecting the position also selects the relationship naming its world.
+				return knowledge.publish(7, [Knowledge.captureFields(sage, ["position"])]);
+			})
+			.flatMap(_ -> {
+				require(memory.get(namespace, "Npc", "sage").bounds.minX == 1000
+					&& candidates(memory).length == 0, "partial spatial update");
+				return knowledge.publish(8, [Knowledge.remove(GameAssets.Ruin)]);
 			})
 			.flatMap(_ -> {
 				require(candidates(memory).length == 0, "tombstoned knowledge excluded");

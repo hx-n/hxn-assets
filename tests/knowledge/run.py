@@ -53,6 +53,45 @@ def main():
             assert message in output, (metadata,fields,output)
         print("PASS: knowledge schema and relation compile diagnostics", flush=True)
 
+        (work / "Data.hx").write_text('@:knowledge("Data") typedef Data = {@:identity var id:String; @:fact var goal:String; var hidden:String;}')
+        partial_cases = [
+            ('["missing"]', "has no field missing"),
+            ('["id"]', "always reads the identity"),
+            ('["hidden"]', "has no knowledge annotation"),
+            ('[]', "selects at least one field"),
+            ('["goal", "goal"]', "names goal twice"),
+            ('names', "array literal of field names"),
+        ]
+        for selection, message in partial_cases:
+            (work / "Main.hx").write_text('class Main { static function main() { var names = ["goal"]; var value:Data = cast null; hxn.assets.Knowledge.captureFields(value, ' + selection + '); } }')
+            output = run([*common, "-cp", work, "-main", "Main", "--interp"], valid=False)
+            assert message in output, (selection, output)
+        (work / "Main.hx").write_text('class Main { static function main() { var value:Data = cast null; hxn.assets.Knowledge.capture(value); } }')
+        print("PASS: partial knowledge capture diagnostics", flush=True)
+
+        # Repeated identities in one batch coalesce, and a partial merges into what precedes it.
+        (work / "Data.hx").write_text('@:knowledge("Data") typedef Data = {@:identity var id:String; @:fact var goal:String; @:fact var mood:String;}')
+        (work / "Main.hx").write_text('''import hxn.assets.Knowledge;
+import hxn.assets.knowledge.KnowledgeBatch;
+class Main { static function main() {
+    final value:Data = {id: "a", goal: "g1", mood: "m1"};
+    final complete = Knowledge.capture(value);
+    value.goal = "g2";
+    final goal = Knowledge.captureFields(value, ["goal"]);
+    value.mood = "m2";
+    final mood = Knowledge.captureFields(value, ["mood"]);
+    var data = new KnowledgeBatch("n", "s", 1, [complete, goal]).data();
+    if (data.version != 1 || data.nodes[0].fields != null || data.nodes[0].facts.goal != "g2" || data.nodes[0].facts.mood != "m1") throw "complete then partial";
+    data = new KnowledgeBatch("n", "s", 1, [goal, mood]).data();
+    if (data.version != 2 || data.nodes[0].fields.join(",") != "goal,mood" || data.nodes[0].facts.mood != "m2") throw "partial then partial";
+    data = new KnowledgeBatch("n", "s", 1, [goal, complete]).data();
+    if (data.version != 1 || data.nodes[0].facts.goal != "g1") throw "partial then complete";
+    try { new KnowledgeBatch("n", "s", 1, [Knowledge.remove(value), goal]); throw "accepted"; } catch (e:String) { if (e == "accepted") throw "partial after tombstone"; }
+    if (!goal.isPartial() || complete.isPartial()) throw "isPartial";
+}}''')
+        run([*common, "-cp", work, "-main", "Main", "--interp"])
+        print("PASS: partial knowledge snapshots coalesce within a batch", flush=True)
+
         (work / "Data.hx").write_text('@:knowledge("Target") typedef Target = {var id:String;}\n@:knowledge("Data") typedef Data = {@:identity var id:String; @:relation("KNOWS") var target:hxn.assets.KnowledgeRef<Target>;}')
         output = run([*common,"-cp",work,"-main","Main","--interp"],valid=False)
         assert "exactly one @:identity" in output, output
@@ -87,7 +126,14 @@ def main():
         first = work/"eval.json"
         print(run([*example,"-D","hxn_knowledge_export","--run","KnowledgeExample",first]).strip(),flush=True)
         batches = json.loads(first.read_text())
-        assert len(batches) == 6 and "Never exported" not in first.read_text()
+        assert len(batches) == 8 and "Never exported" not in first.read_text()
+        # Complete batches keep format version 1; partial ones carry only what they select.
+        assert [batch["version"] for batch in batches] == [1, 1, 1, 1, 1, 2, 2, 1], [batch["version"] for batch in batches]
+        goal, moved = batches[5]["nodes"][0], batches[6]["nodes"][0]
+        assert goal["fields"] == ["goal"] and goal["facts"] == {"goal": "Study the seal"} and goal["bounds"] is None, goal
+        assert goal["links"] == [[], []], goal
+        assert moved["fields"] == ["IN_WORLD"] and moved["facts"] == {} and moved["bounds"]["minX"] == 1000, moved
+        assert all("fields" not in node for batch in batches if batch["version"] == 1 for node in batch["nodes"])
         bytecode = work/"example.hl"
         run([*example,"-D","hxn_knowledge_export","-main","KnowledgeExample","-dce","full","-hl",bytecode])
         second = work/"ash.json"

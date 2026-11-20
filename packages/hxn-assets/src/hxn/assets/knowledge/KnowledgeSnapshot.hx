@@ -7,10 +7,28 @@ import haxe.io.Bytes;
 class KnowledgeSnapshot {
 	final json:String;
 
-	/** Low-level provider boundary; application code uses Knowledge.capture/remove. */
+	/**
+		Low-level provider boundary; application code uses Knowledge.capture, captureFields and remove.
+		`fields` makes the snapshot partial: it names the facts and relationships it carries, and
+		`links` holds an empty list for every relationship it does not select.
+	**/
 	public function new(schema:KnowledgeSchema, id:String, facts:Dynamic, links:Array<Array<String>>, bounds:Null<KnowledgeBounds>,
-			?asset:KnowledgeAssetOrigin, deleted:Bool = false) {
+			?asset:KnowledgeAssetOrigin, deleted:Bool = false, ?fields:Array<String>) {
 		identifier(id, "knowledge identity");
+		if (fields != null) {
+			if (deleted || fields.length == 0)
+				throw "a partial knowledge snapshot selects at least one field and is not a tombstone";
+			final declared = [for (fact in schema.facts) fact.name].concat([for (relation in schema.relations) relation.name]);
+			final unique:Array<String> = [];
+			for (field in fields) {
+				if (declared.indexOf(field) < 0 || unique.indexOf(field) >= 0)
+					throw "invalid partial knowledge selection";
+				unique.push(field);
+			}
+			fields = unique;
+			fields.sort(Reflect.compare);
+		}
+		final selects = (name:String) -> fields == null || fields.indexOf(name) >= 0;
 		name(schema.name);
 		name(schema.identity);
 		if (schema.version < 1 || schema.facts.length + schema.relations.length > 64)
@@ -24,13 +42,13 @@ class KnowledgeSnapshot {
 			names.push(field.name);
 			if (["string", "int", "float", "bool", "string[]", "int[]", "float[]", "bool[]"].indexOf(field.kind) < 0)
 				throw "invalid knowledge fact kind";
-			if (!deleted) {
+			if (!deleted && selects(field.name)) {
 				budget += value(Reflect.field(facts, field.name), field.kind, field.nullable);
 				if (budget > 262144)
 					throw "knowledge snapshot exceeds 256 KiB";
 			}
 		}
-		if (!deleted && Reflect.fields(facts).length != schema.facts.length)
+		if (!deleted && Reflect.fields(facts).length != schema.facts.filter(fact -> selects(fact.name)).length)
 			throw "knowledge facts do not match the schema";
 		if (!deleted && links.length != schema.relations.length)
 			throw "knowledge links do not match the schema";
@@ -48,7 +66,10 @@ class KnowledgeSnapshot {
 			if (names.indexOf(relation.name) >= 0)
 				throw "duplicate knowledge relation";
 			names.push(relation.name);
-			if (!deleted) {
+			if (!deleted && !selects(relation.name)) {
+				if (links[index].length != 0)
+					throw "an unselected knowledge relationship carries targets";
+			} else if (!deleted) {
 				final ids = links[index];
 				if (ids == null
 					|| ids.length > 1024
@@ -69,7 +90,7 @@ class KnowledgeSnapshot {
 				links[index] = unique;
 			}
 		}
-		if (!deleted && (bounds != null) != (schema.spatial != null))
+		if (!deleted && (bounds != null) != (schema.spatial != null && selects(schema.spatial.relation)))
 			throw "knowledge spatial data does not match the schema";
 		if (schema.spatial != null) {
 			identifier(schema.spatial.units, "schema spatial units");
@@ -96,7 +117,9 @@ class KnowledgeSnapshot {
 				throw "invalid asset provenance content ID";
 			origin = {address: asset.address, contentId: asset.contentId};
 		}
-		json = Json.stringify({
+		// Only a partial snapshot carries `fields`, so a complete one keeps its version-1 encoding.
+		// Literal objects keep one key order on every target, which replay digests depend on.
+		json = fields == null ? Json.stringify({
 			schema: schema,
 			id: id,
 			facts: deleted ? {} : facts,
@@ -104,6 +127,15 @@ class KnowledgeSnapshot {
 			bounds: deleted ? null : bounds,
 			asset: origin,
 			deleted: deleted
+		}) : Json.stringify({
+			schema: schema,
+			id: id,
+			facts: facts,
+			links: links,
+			bounds: bounds,
+			asset: origin,
+			deleted: false,
+			fields: fields
 		});
 		if (Bytes.ofString(json).length > 262144)
 			throw "knowledge snapshot exceeds 256 KiB";
@@ -128,6 +160,17 @@ class KnowledgeSnapshot {
 			}
 			links.push(targets);
 		}
+		if (value.fields == null)
+			return {
+				schema: value.schema,
+				id: value.id,
+				facts: value.facts,
+				links: links,
+				bounds: value.bounds,
+				asset: value.asset,
+				deleted: value.deleted
+			};
+		final raw:Array<Dynamic> = value.fields;
 		return {
 			schema: value.schema,
 			id: value.id,
@@ -135,9 +178,89 @@ class KnowledgeSnapshot {
 			links: links,
 			bounds: value.bounds,
 			asset: value.asset,
-			deleted: value.deleted
+			deleted: value.deleted,
+			fields: [for (field in raw) (field : String)]
 		};
 	}
+
+	/** Wire JSON for a node, with one key order on every target. */
+	@:allow(hxn.assets.knowledge.KnowledgeBatch)
+	static function encode(data:KnowledgeData):String {
+		return data.fields == null ? Json.stringify({
+			schema: data.schema,
+			id: data.id,
+			facts: data.facts,
+			links: data.links,
+			bounds: data.bounds,
+			asset: data.asset,
+			deleted: data.deleted
+		}) : Json.stringify({
+			schema: data.schema,
+			id: data.id,
+			facts: data.facts,
+			links: data.links,
+			bounds: data.bounds,
+			asset: data.asset,
+			deleted: data.deleted,
+			fields: data.fields
+		});
+	}
+
+	/**
+		`next` applied over `previous` for one entity: a complete snapshot or tombstone replaces it,
+		and a partial snapshot overwrites only what it selects. The result is complete when
+		`previous` was.
+	**/
+	@:allow(hxn.assets.knowledge.KnowledgeBatch)
+	@:allow(hxn.assets.knowledge.MemoryKnowledgeSink)
+	static function merge(previous:KnowledgeData, next:KnowledgeData):KnowledgeData {
+		if (next.fields == null || next.deleted)
+			return next;
+		if (previous.deleted)
+			throw "a partial knowledge snapshot needs an earlier complete snapshot of the entity";
+		final facts:Dynamic = {};
+		for (name in Reflect.fields(previous.facts))
+			Reflect.setField(facts, name, Reflect.field(previous.facts, name));
+		for (name in Reflect.fields(next.facts))
+			Reflect.setField(facts, name, Reflect.field(next.facts, name));
+		final relations = previous.schema.relations;
+		final links = [
+			for (index in 0...relations.length)
+				(next.fields.indexOf(relations[index].name) >= 0 ? next.links[index] : previous.links[index]).copy()
+		];
+		final spatial = previous.schema.spatial;
+		final moved = spatial != null && next.fields.indexOf(spatial.relation) >= 0;
+		final merged:KnowledgeData = {
+			schema: previous.schema,
+			id: previous.id,
+			facts: facts,
+			links: links,
+			bounds: moved ? next.bounds : previous.bounds,
+			asset: next.asset != null ? next.asset : previous.asset,
+			deleted: false
+		};
+		if (previous.fields == null)
+			return merged;
+		final fields = previous.fields.copy();
+		for (field in next.fields)
+			if (fields.indexOf(field) < 0)
+				fields.push(field);
+		fields.sort(Reflect.compare);
+		return owned(Json.parse(encode({
+			schema: merged.schema,
+			id: merged.id,
+			facts: merged.facts,
+			links: merged.links,
+			bounds: merged.bounds,
+			asset: merged.asset,
+			deleted: false,
+			fields: fields
+		})));
+	}
+
+	/** Whether the snapshot carries only some of its schema's facts and relationships. */
+	public function isPartial():Bool
+		return data().fields != null;
 
 	public static function key(schema:String, id:String):String
 		return Json.stringify([schema, id]);
@@ -199,6 +322,9 @@ typedef KnowledgeData = {
 	var bounds:Null<KnowledgeBounds>;
 	var asset:Null<KnowledgeAssetOrigin>;
 	var deleted:Bool;
+
+	/** The selected fact and relationship names of a partial snapshot; absent when complete. */
+	@:optional var fields:Array<String>;
 }
 
 /** Source identity only; transport URIs, headers and credentials are excluded. */

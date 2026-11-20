@@ -11,11 +11,13 @@ future and queries nearby NPCs who know lore relevant to the player's active que
 | 3 | Sage returns; knowledge and active progress are restored | sage |
 | 4 | Only quest progress completes | none |
 | 5 | Quest becomes active again | sage |
-| 6 | Lore is tombstoned | none |
+| 6 | A partial update publishes only Sage's goal; the local move is not published | sage |
+| 7 | A partial update publishes Sage's position, which moves out of range | none |
+| 8 | Lore is tombstoned | none |
 
 NPCs in another world, distant NPCs and nearby uninformed NPCs are excluded.
 The unannotated privatePrompt field is never captured. Replaying revision 1
-after revision 6 does not restore deleted lore. The embedded KyuGraph example
+after revision 8 does not restore deleted lore. The embedded KyuGraph example
 applies the same batches and executes a parameterized relationship/AABB query,
 including duplicate/stale delivery, exact 64-bit parameters and a checkpoint
 saved and reloaded through hxn-file.

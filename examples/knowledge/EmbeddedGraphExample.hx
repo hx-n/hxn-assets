@@ -112,7 +112,7 @@ private class GraphAssertions implements KnowledgeSink {
 			min_z: -1.0,
 			max_z: 1.0
 		})).flatMap(result -> {
-			final expected = batch.revision == 1 || batch.revision == 3 || batch.revision == 5;
+			final expected = batch.revision == 1 || batch.revision == 3 || batch.revision == 5 || batch.revision == 6;
 			if (result.rows.length != (expected ? 1 : 0) || (expected && result.rows[0][0] != "sage"))
 				throw 'wrong graph result at revision ${batch.revision}';
 			Sys.println('graph revision ${batch.revision}: ' + (expected ? "sage" : "none"));

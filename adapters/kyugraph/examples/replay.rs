@@ -53,7 +53,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         for (index, batch) in batches.iter().enumerate() {
             let json = serde_json::to_string(batch)?;
             assert_eq!(adapter.apply_json(&json)?, ApplyOutcome::Applied);
-            let expected = if index == 0 || index == 2 || index == 4 {
+            let expected = if index == 0 || index == 2 || index == 4 || index == 5 {
                 vec!["sage".to_owned()]
             } else {
                 vec![]
@@ -67,7 +67,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             ApplyOutcome::Stale
         );
         let mut conflict = batches[0].clone();
-        conflict["revision"] = Value::from(6);
+        conflict["revision"] = Value::from(8);
         assert!(adapter.apply_json(&conflict.to_string()).is_err());
         assert!(
             adapter
@@ -85,7 +85,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         ApplyOutcome::Stale
     );
     assert_eq!(
-        adapter.apply_json(&batches[5].to_string())?,
+        adapter.apply_json(&batches[batches.len() - 1].to_string())?,
         ApplyOutcome::Replayed
     );
     assert!(candidates(&adapter)?.is_empty());
