@@ -2,11 +2,11 @@
   "inputs": [
     {
       "path": "Cargo.lock",
-      "sha256": "c1d18c6962cff640c670f02a6b213f399692fa323bd25b98b7ff4302c6188cfa"
+      "sha256": "7197938d4d5ef7a75ac4fdd286db124c2863232a235b7ef035a1bc8fc7b67f27"
     },
     {
       "path": "adapters/kyugraph/Cargo.toml",
-      "sha256": "c3ed7efbf30f5687b4e70ad3bbc8d35ed66a629f34002aa484cddcad021b8767"
+      "sha256": "ea2a53e4c0b5ed244d2f285cdacbd9a482533faf9adc93f72ccfcf8fdaf36656"
     },
     {
       "path": "adapters/kyugraph-jit/Cargo.toml",

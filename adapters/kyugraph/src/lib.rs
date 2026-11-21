@@ -371,9 +371,6 @@ pub enum ApplyOutcome {
 /// A single-writer adapter over an application-owned native KyuGraph connection.
 pub struct KnowledgeAdapter {
     connection: Connection,
-    /// What the last applied delta changed, for tests of its granularity.
-    #[cfg(test)]
-    last: Option<kyu_graph::DeltaStats>,
 }
 impl KnowledgeAdapter {
     pub fn new(connection: Connection) -> Result<Self> {
@@ -400,11 +397,7 @@ impl KnowledgeAdapter {
         connection.query("MATCH (s:`_HxnKnowledgeSchema`) RETURN s.name, s.definition LIMIT 0")?;
         connection
             .query("MATCH (s:`_HxnKnowledgeSource`) RETURN s.key, s.revision, s.digest LIMIT 0")?;
-        Ok(Self {
-            connection,
-            #[cfg(test)]
-            last: None,
-        })
+        Ok(Self { connection })
     }
 
     /// Query with KyuGraph's parameter bindings on the same database.
@@ -488,54 +481,41 @@ impl KnowledgeAdapter {
             )?;
         }
 
-        // One lookup per semantic type, in chunks: the owner, outgoing links and tombstone of each
-        // entity named. Keys are separate parameters: KyuGraph 0.4 matches no rows for `IN` or
-        // `UNWIND` over a list parameter against values written by a delta.
-        let mut by_schema = BTreeMap::<&str, Vec<String>>::new();
+        // One lookup per semantic type: the owner, outgoing links and tombstone of each entity named.
+        let mut by_schema = BTreeMap::<&str, Vec<Value>>::new();
         for node in &batch.nodes {
             by_schema
                 .entry(&node.schema.name)
                 .or_default()
-                .push(key(&batch.namespace, &node.id));
+                .push(Value::String(key(&batch.namespace, &node.id)));
         }
         let mut stored = HashMap::<(String, String), Stored>::new();
         for (name, keys) in by_schema {
-            for chunk in keys.chunks(64) {
-                let matches: Vec<String> = (0..chunk.len())
-                    .map(|index| format!("n._hxn_key = $k{index}"))
-                    .collect();
-                let bindings: HashMap<String, TypedValue> = chunk
-                    .iter()
-                    .enumerate()
-                    .map(|(index, node_key)| (format!("k{index}"), string(node_key)))
-                    .collect();
-                let found = self.connection.query_with_params(
-                    &format!(
-                        "MATCH (n:{}) WHERE {} RETURN n._hxn_key, n._hxn_source, n._hxn_links, n._hxn_deleted",
-                        quote(name),
-                        matches.join(" OR ")
-                    ),
-                    bindings,
-                )?;
-                for row in found.iter_rows() {
-                    let (
-                        TypedValue::String(node_key),
-                        TypedValue::String(source),
-                        TypedValue::String(links),
-                        TypedValue::Bool(deleted),
-                    ) = (&row[0], &row[1], &row[2], &row[3])
-                    else {
-                        return Err(KnowledgeError("invalid stored knowledge entity".into()));
-                    };
-                    stored.insert(
-                        (name.to_owned(), node_key.to_string()),
-                        Stored {
-                            source: source.to_string(),
-                            links: serde_json::from_str(links)?,
-                            deleted: *deleted,
-                        },
-                    );
-                }
+            let found = self.connection.query_with_params(
+                &format!(
+                    "MATCH (n:{}) WHERE n._hxn_key IN $keys RETURN n._hxn_key, n._hxn_source, n._hxn_links, n._hxn_deleted",
+                    quote(name)
+                ),
+                params([("keys", TypedValue::from(Value::Array(keys)))]),
+            )?;
+            for row in found.iter_rows() {
+                let (
+                    TypedValue::String(node_key),
+                    TypedValue::String(source),
+                    TypedValue::String(links),
+                    TypedValue::Bool(deleted),
+                ) = (&row[0], &row[1], &row[2], &row[3])
+                else {
+                    return Err(KnowledgeError("invalid stored knowledge entity".into()));
+                };
+                stored.insert(
+                    (name.to_owned(), node_key.to_string()),
+                    Stored {
+                        source: source.to_string(),
+                        links: serde_json::from_str(links)?,
+                        deleted: *deleted,
+                    },
+                );
             }
         }
 
@@ -681,11 +661,7 @@ impl KnowledgeAdapter {
                 ("digest", string(digest)),
             ],
         );
-        let _stats = self.connection.apply_delta(delta.build())?;
-        #[cfg(test)]
-        {
-            self.last = Some(_stats);
-        }
+        self.connection.apply_delta(delta.build())?;
         Ok(ApplyOutcome::Applied)
     }
 
@@ -882,15 +858,12 @@ mod tests {
     fn relationship_updates_touch_only_changed_edges() {
         let (_database, mut adapter, npc) = seeded();
         let known = |adapter: &KnowledgeAdapter| {
-            let mut ids: Vec<String> = rows(
+            let mut edges = rows(
                 adapter,
-                "MATCH (n:Npc)-[:Npc__KNOWS__Lore]->(l:Lore) RETURN l.id",
-            )
-            .into_iter()
-            .map(|row| format!("{:?}", row[0]))
-            .collect();
-            ids.sort();
-            ids
+                "MATCH (n:Npc)-[e:Npc__KNOWS__Lore]->(l:Lore) RETURN l.id, e._hxn_revision",
+            );
+            edges.sort_by_key(|row| format!("{:?}", row[0]));
+            edges
         };
         let update = partial(
             &npc,
@@ -901,16 +874,13 @@ mod tests {
             json!(["KNOWS"]),
         );
         adapter.apply_json(&update).expect("add b");
-        assert_eq!(known(&adapter), vec![r#"String("a")"#, r#"String("b")"#]);
-        // Only the new edge is written; the unchanged one and the unselected world are not.
-        let stats = adapter.last.as_ref().expect("stats");
+        // The unchanged edge keeps the revision that created it; only the new one is written.
         assert_eq!(
-            (
-                stats.edges_created,
-                stats.edges_updated,
-                stats.edges_deleted
-            ),
-            (1, 0, 0)
+            known(&adapter),
+            vec![
+                vec![string("a"), TypedValue::Int64(1)],
+                vec![string("b"), TypedValue::Int64(2)]
+            ]
         );
         let complete = batch(
             1,
@@ -924,15 +894,9 @@ mod tests {
             )],
         );
         adapter.apply_json(&complete).expect("drop a");
-        assert_eq!(known(&adapter), vec![r#"String("b")"#]);
-        let stats = adapter.last.as_ref().expect("stats");
         assert_eq!(
-            (
-                stats.edges_created,
-                stats.edges_updated,
-                stats.edges_deleted
-            ),
-            (0, 0, 1)
+            known(&adapter),
+            vec![vec![string("b"), TypedValue::Int64(2)]]
         );
         let links = rows(&adapter, "MATCH (n:Npc) RETURN n._hxn_links");
         assert_eq!(links[0][0], string(r#"[["b"],["north"]]"#));

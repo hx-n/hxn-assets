@@ -837,7 +837,7 @@ dependencies = [
 [[package]]
 name = "kyu-api"
 version = "0.4.0"
-source = "git+https://github.com/offbit-ai/kyugraph.git?rev=64f41a248a9ed5d30baf5c04ba551b5cb04f342a#64f41a248a9ed5d30baf5c04ba551b5cb04f342a"
+source = "git+https://github.com/offbit-ai/kyugraph.git?rev=81bb070d8318f2e2fdb32163762f2af4a7b8efb6#81bb070d8318f2e2fdb32163762f2af4a7b8efb6"
 dependencies = [
  "hashbrown 0.15.5",
  "kyu-binder",
@@ -860,7 +860,7 @@ dependencies = [
 [[package]]
 name = "kyu-binder"
 version = "0.4.0"
-source = "git+https://github.com/offbit-ai/kyugraph.git?rev=64f41a248a9ed5d30baf5c04ba551b5cb04f342a#64f41a248a9ed5d30baf5c04ba551b5cb04f342a"
+source = "git+https://github.com/offbit-ai/kyugraph.git?rev=81bb070d8318f2e2fdb32163762f2af4a7b8efb6#81bb070d8318f2e2fdb32163762f2af4a7b8efb6"
 dependencies = [
  "kyu-catalog",
  "kyu-common",
@@ -874,7 +874,7 @@ dependencies = [
 [[package]]
 name = "kyu-catalog"
 version = "0.4.0"
-source = "git+https://github.com/offbit-ai/kyugraph.git?rev=64f41a248a9ed5d30baf5c04ba551b5cb04f342a#64f41a248a9ed5d30baf5c04ba551b5cb04f342a"
+source = "git+https://github.com/offbit-ai/kyugraph.git?rev=81bb070d8318f2e2fdb32163762f2af4a7b8efb6#81bb070d8318f2e2fdb32163762f2af4a7b8efb6"
 dependencies = [
  "kyu-common",
  "kyu-parser",
@@ -888,7 +888,7 @@ dependencies = [
 [[package]]
 name = "kyu-common"
 version = "0.4.0"
-source = "git+https://github.com/offbit-ai/kyugraph.git?rev=64f41a248a9ed5d30baf5c04ba551b5cb04f342a#64f41a248a9ed5d30baf5c04ba551b5cb04f342a"
+source = "git+https://github.com/offbit-ai/kyugraph.git?rev=81bb070d8318f2e2fdb32163762f2af4a7b8efb6#81bb070d8318f2e2fdb32163762f2af4a7b8efb6"
 dependencies = [
  "serde",
  "smol_str",
@@ -898,7 +898,7 @@ dependencies = [
 [[package]]
 name = "kyu-delta"
 version = "0.4.0"
-source = "git+https://github.com/offbit-ai/kyugraph.git?rev=64f41a248a9ed5d30baf5c04ba551b5cb04f342a#64f41a248a9ed5d30baf5c04ba551b5cb04f342a"
+source = "git+https://github.com/offbit-ai/kyugraph.git?rev=81bb070d8318f2e2fdb32163762f2af4a7b8efb6#81bb070d8318f2e2fdb32163762f2af4a7b8efb6"
 dependencies = [
  "hashbrown 0.15.5",
  "kyu-common",
@@ -909,7 +909,7 @@ dependencies = [
 [[package]]
 name = "kyu-executor"
 version = "0.4.0"
-source = "git+https://github.com/offbit-ai/kyugraph.git?rev=64f41a248a9ed5d30baf5c04ba551b5cb04f342a#64f41a248a9ed5d30baf5c04ba551b5cb04f342a"
+source = "git+https://github.com/offbit-ai/kyugraph.git?rev=81bb070d8318f2e2fdb32163762f2af4a7b8efb6#81bb070d8318f2e2fdb32163762f2af4a7b8efb6"
 dependencies = [
  "arc-swap",
  "cranelift-codegen",
@@ -935,7 +935,7 @@ dependencies = [
 [[package]]
 name = "kyu-expression"
 version = "0.4.0"
-source = "git+https://github.com/offbit-ai/kyugraph.git?rev=64f41a248a9ed5d30baf5c04ba551b5cb04f342a#64f41a248a9ed5d30baf5c04ba551b5cb04f342a"
+source = "git+https://github.com/offbit-ai/kyugraph.git?rev=81bb070d8318f2e2fdb32163762f2af4a7b8efb6#81bb070d8318f2e2fdb32163762f2af4a7b8efb6"
 dependencies = [
  "hashbrown 0.15.5",
  "kyu-common",
@@ -949,7 +949,7 @@ dependencies = [
 [[package]]
 name = "kyu-extension"
 version = "0.4.0"
-source = "git+https://github.com/offbit-ai/kyugraph.git?rev=64f41a248a9ed5d30baf5c04ba551b5cb04f342a#64f41a248a9ed5d30baf5c04ba551b5cb04f342a"
+source = "git+https://github.com/offbit-ai/kyugraph.git?rev=81bb070d8318f2e2fdb32163762f2af4a7b8efb6#81bb070d8318f2e2fdb32163762f2af4a7b8efb6"
 dependencies = [
  "kyu-types",
 ]
@@ -957,7 +957,7 @@ dependencies = [
 [[package]]
 name = "kyu-graph"
 version = "0.4.0"
-source = "git+https://github.com/offbit-ai/kyugraph.git?rev=64f41a248a9ed5d30baf5c04ba551b5cb04f342a#64f41a248a9ed5d30baf5c04ba551b5cb04f342a"
+source = "git+https://github.com/offbit-ai/kyugraph.git?rev=81bb070d8318f2e2fdb32163762f2af4a7b8efb6#81bb070d8318f2e2fdb32163762f2af4a7b8efb6"
 dependencies = [
  "kyu-api",
  "kyu-binder",
@@ -972,7 +972,7 @@ dependencies = [
 [[package]]
 name = "kyu-parser"
 version = "0.4.0"
-source = "git+https://github.com/offbit-ai/kyugraph.git?rev=64f41a248a9ed5d30baf5c04ba551b5cb04f342a#64f41a248a9ed5d30baf5c04ba551b5cb04f342a"
+source = "git+https://github.com/offbit-ai/kyugraph.git?rev=81bb070d8318f2e2fdb32163762f2af4a7b8efb6#81bb070d8318f2e2fdb32163762f2af4a7b8efb6"
 dependencies = [
  "ariadne",
  "chumsky",
@@ -984,7 +984,7 @@ dependencies = [
 [[package]]
 name = "kyu-planner"
 version = "0.4.0"
-source = "git+https://github.com/offbit-ai/kyugraph.git?rev=64f41a248a9ed5d30baf5c04ba551b5cb04f342a#64f41a248a9ed5d30baf5c04ba551b5cb04f342a"
+source = "git+https://github.com/offbit-ai/kyugraph.git?rev=81bb070d8318f2e2fdb32163762f2af4a7b8efb6#81bb070d8318f2e2fdb32163762f2af4a7b8efb6"
 dependencies = [
  "hashbrown 0.15.5",
  "kyu-binder",
@@ -999,7 +999,7 @@ dependencies = [
 [[package]]
 name = "kyu-storage"
 version = "0.4.0"
-source = "git+https://github.com/offbit-ai/kyugraph.git?rev=64f41a248a9ed5d30baf5c04ba551b5cb04f342a#64f41a248a9ed5d30baf5c04ba551b5cb04f342a"
+source = "git+https://github.com/offbit-ai/kyugraph.git?rev=81bb070d8318f2e2fdb32163762f2af4a7b8efb6#81bb070d8318f2e2fdb32163762f2af4a7b8efb6"
 dependencies = [
  "dashmap",
  "kyu-common",
@@ -1011,7 +1011,7 @@ dependencies = [
 [[package]]
 name = "kyu-transaction"
 version = "0.4.0"
-source = "git+https://github.com/offbit-ai/kyugraph.git?rev=64f41a248a9ed5d30baf5c04ba551b5cb04f342a#64f41a248a9ed5d30baf5c04ba551b5cb04f342a"
+source = "git+https://github.com/offbit-ai/kyugraph.git?rev=81bb070d8318f2e2fdb32163762f2af4a7b8efb6#81bb070d8318f2e2fdb32163762f2af4a7b8efb6"
 dependencies = [
  "kyu-common",
  "kyu-storage",
@@ -1021,7 +1021,7 @@ dependencies = [
 [[package]]
 name = "kyu-types"
 version = "0.4.0"
-source = "git+https://github.com/offbit-ai/kyugraph.git?rev=64f41a248a9ed5d30baf5c04ba551b5cb04f342a#64f41a248a9ed5d30baf5c04ba551b5cb04f342a"
+source = "git+https://github.com/offbit-ai/kyugraph.git?rev=81bb070d8318f2e2fdb32163762f2af4a7b8efb6#81bb070d8318f2e2fdb32163762f2af4a7b8efb6"
 dependencies = [
  "kyu-common",
  "serde",
