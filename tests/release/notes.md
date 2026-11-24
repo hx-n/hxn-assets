@@ -1,3 +1,5 @@
+0.2.2: Both haxelibs carry bindings for x86_64-linux-android, which Android emulators on x86_64 machines run.
+
 0.2.1: `hxn.assets.Assets.process(fields)` lets another build macro change the fields of a declaration class first and then run hxn-assets' generation on them. Knowledge snapshots publish only the parts that change, and the graph uses KyuGraph 81bb070.
 
 Install `hxn-assets` for typed assets, remote streams and an embedded knowledge graph. The package includes its KyuGraph engine and prebuilt bindings; Haxe consumers need no Rust toolchain or extra backend package. Metadata and explicit publication opt in to graph projection.

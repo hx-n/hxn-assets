@@ -1,7 +1,7 @@
 # hxn-file
 
 ```text
-haxelib install hxn-file 0.2.1
+haxelib install hxn-file 0.2.2
 ```
 
 Read bundled assets and persist application saves and string preferences through

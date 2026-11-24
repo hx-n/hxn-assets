@@ -2,7 +2,7 @@
   "inputs": [
     {
       "path": "Cargo.lock",
-      "sha256": "79ddf2adb0fdaed7f7d8e3997d1d8013c6a1302bf84c7ec5040bd52b91d987e4"
+      "sha256": "9e5bc4be63e4461f14a3f4b1c4eb0c242bd412266ce81c19ee9ea98f9c84c863"
     },
     {
       "path": "adapters/kyugraph/Cargo.toml",
@@ -14,11 +14,11 @@
     },
     {
       "path": "packages/hxn-assets/Cargo.toml",
-      "sha256": "bd3ccc13e3066ae3df416e5fc1908784d17df3fc660bc638d8db5801d0fbe4ce"
+      "sha256": "a0db018f607341184eaffba513897bac7b39926f2581919622dcf9b06ea01a95"
     },
     {
       "path": "packages/hxn-file/Cargo.toml",
-      "sha256": "0543aac5681d545053887042e807c77211a4dc4a18044cf5bdaab0d850dc0d73"
+      "sha256": "980e735dc76ca717806279498c018160a963b53c8996b97529e8ec528496ecd9"
     }
   ],
   "packages": [

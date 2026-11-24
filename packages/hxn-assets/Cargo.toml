@@ -16,7 +16,7 @@ path = "native-src/lib.rs"
 library = "assets"
 haxelib = "hxn-assets"
 contributors = ["darmie"]
-releasenote = "Assets.process lets another build macro extend asset declarations. Knowledge snapshots publish only what changes."
+releasenote = "Bindings for x86_64-linux-android, for Android emulators."
 haxe = "../../tests/knowledge-native"
 haxe-flags = ["-lib", "hxn:0.3.10", "-lib", "format:3.8.0", "-cp", "../../examples/knowledge", "-D", "hxn_assets_dir=../../examples/knowledge/assets", "-lib", "hxn-file", "-cp", "src"]
 
