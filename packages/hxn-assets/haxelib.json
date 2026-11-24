@@ -1,17 +1,17 @@
 {
   "name": "hxn-assets",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "license": "Apache",
   "url": "https://github.com/hx-n/hxn-assets",
   "description": "Typed assets, asynchronous loading and semantic knowledge metadata",
   "contributors": [
     "darmie"
   ],
-  "releasenote": "Packaged embedded graph with selectable JIT and portable checkpoints.",
+  "releasenote": "Assets.process lets another build macro extend asset declarations. Knowledge snapshots publish only what changes.",
   "classPath": "src",
   "dependencies": {
     "hxn": "0.3.10",
-    "hxn-file": "0.2.0",
+    "hxn-file": "0.2.1",
     "format": "3.8.0"
   },
   "hxn": {
@@ -31,6 +31,7 @@
   "tags": [
     "hxcpp",
     "hashlink",
+    "cppia",
     "native",
     "cross",
     "wasm",
