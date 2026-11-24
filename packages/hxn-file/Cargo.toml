@@ -5,7 +5,7 @@ edition.workspace = true
 license.workspace = true
 repository.workspace = true
 description = "Asynchronous files, application persistence and remote URI I/O for Haxe"
-keywords = ["hxcpp", "hashlink", "native", "cross", "wasm"]
+keywords = ["hxcpp", "hashlink", "cppia", "native", "cross", "wasm"]
 
 [lib]
 name = "hxn_file"
@@ -14,7 +14,7 @@ name = "hxn_file"
 library = "file"
 haxelib = "hxn-file"
 contributors = ["darmie"]
-releasenote = "Updated platform bindings for hxn 0.3.10 and the embedded assets graph release."
+releasenote = "Released with hxn-assets 0.2.1."
 haxe = "../../tests/check"
 init = ["hxn.file.Init.register()"]
 haxe-flags = ["-D", "hxn_assets_dir=../../tests/fixtures/assets"]
