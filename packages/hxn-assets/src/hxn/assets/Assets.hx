@@ -32,8 +32,16 @@ import hxn.assets.macros.Values;
  */
 class Assets {
 	/** Generates embedded values, dynamic loaders, addresses and a catalog factory. */
-	public static macro function build():Array<Field> {
-		final fields = Context.getBuildFields(), owner = Context.getLocalClass().get();
+	public static macro function build():Array<Field>
+		return process(Context.getBuildFields());
+
+	#if macro
+	/**
+		Does what `build` does with `fields`, the fields of the class that is
+		being built. Another build macro calls it after it changes the fields.
+	**/
+	public static function process(fields:Array<Field>):Array<Field> {
+		final owner = Context.getLocalClass().get();
 		final rootValue = Context.definedValue("hxn_assets_dir");
 		final directory = rootValue == null ? "assets" : rootValue;
 		final classHash = hashing(owner.meta.get());
@@ -237,7 +245,6 @@ class Assets {
 		return fields;
 	}
 
-	#if macro
 	static function generateDynamic(fields:Array<Field>, declarations:Array<Declaration>):Void {
 		if (declarations.length == 0)
 			return;

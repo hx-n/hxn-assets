@@ -45,6 +45,10 @@ The macro generates the catalog and optional SHA-256 IDs. Provider-based loading
 uses `GameAssets.catalog()` and `GameAssets.addresses.Start`. `FileSource` borrows
 an hxn-file Storage; custom sources return `hxn.Future<Bytes>`.
 
+Another build macro can extend the declarations: it changes the fields of
+`Context.getBuildFields()`, then returns `hxn.assets.Assets.process(fields)`,
+which does what `build()` does with those fields.
+
 The installed haxelib also supplies whole-directory imports:
 
 ```text
