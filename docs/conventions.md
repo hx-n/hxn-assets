@@ -151,7 +151,8 @@ Git-bug synchronization is separate from source pushes and requires a request.
 ## Releases
 
 Both haxelibs share the workspace version and a `v<version>` tag. The release
-workflow builds both native packages for desktop, iOS, Android, threaded Ash
+workflow builds both native packages for desktop, iOS, Android (arm64, and
+x86_64 for emulators in CI), threaded Ash
 wasm and both Emscripten modes. Desktop and Android also build a JIT variant
 inside hxn-assets; iOS and wasm use scalar/vectorized evaluation. It merges platform binaries and checks the archives before
 installing both ZIPs for native and real browser consumer checks. Tests use
