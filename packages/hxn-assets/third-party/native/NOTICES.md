@@ -67,10 +67,10 @@ When redistributing binaries, retain the applicable notices and license texts.
 | hashbrown 0.17.1 | MIT OR Apache-2.0 | [LICENSE-APACHE](licenses/hashbrown-0.17.1/LICENSE-APACHE), [LICENSE-MIT](licenses/hashbrown-0.17.1/LICENSE-MIT) |
 | heck 0.5.0 | MIT OR Apache-2.0 | [LICENSE-APACHE](licenses/heck-0.5.0/LICENSE-APACHE), [LICENSE-MIT](licenses/heck-0.5.0/LICENSE-MIT) |
 | hl_abi 0.1.0 | MIT | [LICENSE-MIT](licenses/hl_abi-0.1.0/LICENSE-MIT), [UPSTREAM-MANIFEST.txt](licenses/hl_abi-0.1.0/UPSTREAM-MANIFEST.txt) |
-| hxn 0.3.10 | Apache-2.0 | [LICENSE](licenses/hxn-0.3.10/LICENSE) |
-| hxn-abi 0.3.10 | Apache-2.0 | [LICENSE](licenses/hxn-abi-0.3.10/LICENSE) |
-| hxn-future 0.3.10 | Apache-2.0 | [LICENSE](licenses/hxn-future-0.3.10/LICENSE) |
-| hxn-macros 0.3.10 | Apache-2.0 | [LICENSE](licenses/hxn-macros-0.3.10/LICENSE) |
+| hxn 0.3.11 | Apache-2.0 | [LICENSE](licenses/hxn-0.3.11/LICENSE) |
+| hxn-abi 0.3.11 | Apache-2.0 | [LICENSE](licenses/hxn-abi-0.3.11/LICENSE) |
+| hxn-future 0.3.11 | Apache-2.0 | [LICENSE](licenses/hxn-future-0.3.11/LICENSE) |
+| hxn-macros 0.3.11 | Apache-2.0 | [LICENSE](licenses/hxn-macros-0.3.11/LICENSE) |
 | indexmap 2.14.2 | Apache-2.0 OR MIT | [LICENSE-APACHE](licenses/indexmap-2.14.2/LICENSE-APACHE), [LICENSE-MIT](licenses/indexmap-2.14.2/LICENSE-MIT) |
 | itoa 1.0.19 | MIT OR Apache-2.0 | [LICENSE-APACHE](licenses/itoa-1.0.19/LICENSE-APACHE), [LICENSE-MIT](licenses/itoa-1.0.19/LICENSE-MIT) |
 | krio-core 0.1.0 | MIT OR Apache-2.0 | [LICENSE](licenses/krio-core-0.1.0/LICENSE) |

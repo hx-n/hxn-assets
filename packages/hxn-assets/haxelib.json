@@ -10,7 +10,7 @@
   "releasenote": "Bindings for x86_64-linux-android, for Android emulators.",
   "classPath": "src",
   "dependencies": {
-    "hxn": "0.3.10",
+    "hxn": "0.3.11",
     "hxn-file": "0.2.2",
     "format": "3.8.0"
   },
@@ -20,6 +20,8 @@
       "namespace": "assets",
       "command": [
         "haxe",
+        "-lib",
+        "hxn",
         "-cp",
         "{root}/src",
         "--run",

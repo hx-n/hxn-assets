@@ -684,8 +684,8 @@ checksum = "6dbf3de79e51f3d586ab4cb9d5c3e2c14aa28ed23d180cf89b4df0454a69cc87"
 
 [[package]]
 name = "hxn"
-version = "0.3.10"
-source = "git+https://github.com/hx-n/hxn.git?tag=v0.3.10#ebffa90d82bd474d9737ca9e26ebc31988cedc6f"
+version = "0.3.11"
+source = "git+https://github.com/hx-n/hxn.git?tag=v0.3.11#da060b2d6570988d21d030c10af5d61b31b4ad8b"
 dependencies = [
  "hxn-abi",
  "hxn-macros",
@@ -693,8 +693,8 @@ dependencies = [
 
 [[package]]
 name = "hxn-abi"
-version = "0.3.10"
-source = "git+https://github.com/hx-n/hxn.git?tag=v0.3.10#ebffa90d82bd474d9737ca9e26ebc31988cedc6f"
+version = "0.3.11"
+source = "git+https://github.com/hx-n/hxn.git?tag=v0.3.11#da060b2d6570988d21d030c10af5d61b31b4ad8b"
 
 [[package]]
 name = "hxn-assets"
@@ -745,8 +745,8 @@ dependencies = [
 
 [[package]]
 name = "hxn-future"
-version = "0.3.10"
-source = "git+https://github.com/hx-n/hxn.git?tag=v0.3.10#ebffa90d82bd474d9737ca9e26ebc31988cedc6f"
+version = "0.3.11"
+source = "git+https://github.com/hx-n/hxn.git?tag=v0.3.11#da060b2d6570988d21d030c10af5d61b31b4ad8b"
 dependencies = [
  "hxn-abi",
  "krio-core",
@@ -756,8 +756,8 @@ dependencies = [
 
 [[package]]
 name = "hxn-macros"
-version = "0.3.10"
-source = "git+https://github.com/hx-n/hxn.git?tag=v0.3.10#ebffa90d82bd474d9737ca9e26ebc31988cedc6f"
+version = "0.3.11"
+source = "git+https://github.com/hx-n/hxn.git?tag=v0.3.11#da060b2d6570988d21d030c10af5d61b31b4ad8b"
 
 [[package]]
 name = "hybrid-array"

@@ -38,7 +38,7 @@ def main():
     version = tomllib.loads((ROOT / "Cargo.toml").read_text())["workspace"]["package"]["version"]
     asset = json.loads((ROOT / "packages/hxn-assets/haxelib.json").read_text())
     assert asset["version"] == asset["dependencies"]["hxn-file"] == version
-    assert asset["dependencies"]["hxn"] == "0.3.10"
+    assert asset["dependencies"]["hxn"] == "0.3.11"
     ref = os.environ.get("GITHUB_REF", "")
     if ref.startswith("refs/tags/"):
         assert ref == "refs/tags/v" + version, "tag and package versions differ"
@@ -77,7 +77,7 @@ def main():
             assert {"haxelib.json", "README.md", "LICENSE", "extraParams.hxml", "third-party/NOTICES.md", f"skills/{name}/SKILL.md"} <= paths
             meta = json.loads(archive.read("haxelib.json"))
             assert meta["name"] == name and meta["version"] == version
-            assert meta["dependencies"]["hxn"] == "0.3.10"
+            assert meta["dependencies"]["hxn"] == "0.3.11"
             assert not any(p.startswith(("tests/", "adapters/", "target/")) for p in paths)
             if name == "hxn-file":
                 assert {p.split("/")[1] for p in paths if p.startswith("native/")} == TARGETS

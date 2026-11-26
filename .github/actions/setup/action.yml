@@ -10,7 +10,7 @@ runs:
     - uses: actions/checkout@v4
       with:
         repository: hx-n/hxn
-        ref: v0.3.10
+        ref: v0.3.11
         path: tests/.tools/hxn
     - uses: dtolnay/rust-toolchain@master
       with:
@@ -39,7 +39,7 @@ runs:
         python-version: '3.12'
     - shell: bash
       run: |
-        haxelib install hxn 0.3.10 --always --quiet
+        haxelib install hxn 0.3.11 --always --quiet
         haxelib install format 3.8.0 --always --quiet
         haxelib install hxn-file 0.1.0 --always --quiet
     - if: inputs.runtime != 'checks'

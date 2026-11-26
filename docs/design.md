@@ -1,7 +1,7 @@
 # Design
 
 This monorepo separates platform I/O (`packages/hxn-file`) from asset metadata
-and byte loading (`packages/hxn-assets`). hxn-file pins hxn 0.3.10 for generated
+and byte loading (`packages/hxn-assets`). hxn-file pins hxn 0.3.11 for generated
 bindings. hxn-assets uses those bindings through `FileSource` and includes its
 own native embedded KyuGraph binding. Both haxelibs install prebuilt artifacts.
 
