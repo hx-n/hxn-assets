@@ -8,7 +8,7 @@ description = "KyuGraph projection core used by the installed hxn-assets package
 
 
 [dependencies]
-kyu-graph = { git = "https://github.com/offbit-ai/kyugraph.git", rev = "81bb070d8318f2e2fdb32163762f2af4a7b8efb6", default-features = false }
+kyu-graph = { git = "https://github.com/offbit-ai/kyugraph.git", rev = "229c8d89cde9ee9de38a77f1524f657afb3ca406", default-features = false }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 sha2 = "0.10"

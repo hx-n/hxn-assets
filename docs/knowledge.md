@@ -145,6 +145,8 @@ through their Haxe configuration.
 
 ## Embedded graph
 
+### Batches and sinks
+
 KnowledgeSink.apply returns hxn.Future<Unit>. KnowledgeBatch.toJson produces
 UTF-8 JSON: format version 1 when every snapshot is complete, and version 2 when
 the batch carries partial snapshots, each naming its selected facts and
@@ -153,6 +155,8 @@ and a sink that reads only version 1 rejects version 2 rather than misreading
 it. The data() method gives providers detached values; `fields` is absent for a
 complete snapshot. Sinks preserve replacement, partial updates, ownership,
 schema validation, replay and tombstones.
+
+### Opening and querying a graph
 
 The normal hxn-assets haxelib includes prebuilt KyuGraph binaries and the
 `hxn.assets.KnowledgeGraph` facade. No Rust compiler or separate backend package
@@ -179,6 +183,8 @@ lists/objects and Bytes; 64-bit integers outside the Haxe Int range use haxe.Int
 Integers wider than signed 64 bits use decimal strings. Parameters accept Haxe
 scalars, haxe.Int64, Bytes, lists and anonymous objects. Bind values as parameters.
 
+### Persistence
+
 `KnowledgeGraph.open()` creates an in-memory graph on every platform.
 `open(directory)` additionally supports native filesystem persistence. Browser
 code uses memory graphs with `save(storage, path)` and `load(storage, path)` for
@@ -188,6 +194,8 @@ explicit, not automatic after publication. Checkpoints are compatible between
 scalar and JIT builds of the same format. Await outstanding work before close;
 close rejects new work and releases the native handle after shutdown.
 
+### JIT and scalar engines
+
 Use `hxn assets build --jit app.hxml` or `hxn assets build --no-jit app.hxml` to
 choose the installed engine. Without a flag, the compiler selects JIT where
 available and scalar otherwise. Direct Haxe builds use `-D hxn_assets_jit=on`,
@@ -196,6 +204,8 @@ use scalar/vectorized evaluation; an explicit unsupported JIT request fails
 with a target-specific message. These flags control KyuGraph, independently of
 Ash's own execution mode. CPPIA scripts must match their native host's selection.
 The graph's `jit` property reports the actual selected build.
+
+### Limits and threads
 
 Emscripten graph programs use an 8 MiB native stack for parsing and evaluation.
 KnowledgeGraph adds the link setting when used; byte-only asset programs keep
@@ -209,6 +219,8 @@ runs CPU work synchronously without starting threads. Keep expensive queries out
 of latency-sensitive paths. Query text is limited to 64 KiB, parameters to
 256 KiB/64 bindings (names and object field names up to 256 characters), results to 1024 rows/64 columns and 1 MiB of encoded values,
 and checkpoints to 64 MiB. Result limits do not bound engine intermediate work.
+
+### Projection into tables
 
 The internal projection component under adapters/kyugraph accepts batch JSON
 through KnowledgeAdapter::apply_json. It generates typed tables and uses DeltaBatchBuilder
@@ -225,18 +237,25 @@ contain different data. Ownership and tombstones survive restart. Schema DDL is 
 separately. A later failure can leave unused tables. The adapter does not
 acknowledge a failed data revision.
 
+### Table layout
+
 Relationship tables use Source__RELATION__Target, e.g. Npc__KNOWS__Lore. Nodes
 carry _hxn_namespace, _hxn_deleted, source/revision, optional asset provenance and
 spatial _hxn_* columns. Scope queries and exclude tombstones on every semantic
 node. Query values use parameter bindings. The adapter checks and quotes
-identifiers.
-Scalar arrays use JSON text in STRING columns because KyuGraph 0.4 Cypher DDL
-cannot declare list columns. Use related entities for queryable collection members.
+identifiers. A fact of a scalar array type is a list column, such as `STRING[]`
+for `Array<String>`, and queries filter on its members with `IN`, as in
+`WHERE 'guard' IN n.roles`. Graphs saved by hxn-assets 0.2.2 keep their array
+facts as JSON text in STRING columns.
+
+### Namespaces and shared graphs
 
 The facade serializes operations per database. Namespaces organize data; they do
-not authorize access. Connected applications can provide a KnowledgeSink
-transport and an authorized endpoint. The embedded API does not implement
-remote hosting, synchronization or CRDT merging.
+not authorize access. The embedded graph belongs to one process. For a graph
+that several clients share, the application provides a KnowledgeSink that sends
+batches to its own authorized endpoint.
+
+### Example
 
 See the [runnable model/scenario](../examples/knowledge/README.md) and
 [KyuGraph query](../adapters/kyugraph/examples/replay.rs) combining lore, progress,

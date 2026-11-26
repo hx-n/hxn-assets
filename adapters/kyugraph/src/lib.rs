@@ -2,7 +2,7 @@
 //!
 //! The caller owns scheduling, authorization and the database connection. This
 //! crate supplies graph updates; the hxn-assets binding owns its scheduling.
-use std::collections::{BTreeMap, BTreeSet, HashMap};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::error::Error;
 use std::fmt;
 
@@ -159,9 +159,17 @@ fn scalar_type(kind: &str) -> Option<&'static str> {
         _ => None,
     }
 }
-fn sql_type(kind: &str) -> Option<String> {
+// The column type of a fact. With `lists`, an array fact is a list column; without, a
+// STRING column of JSON text, as graphs from hxn-assets 0.2.2 have it.
+fn sql_type(kind: &str, lists: bool) -> Option<String> {
     if let Some(child) = kind.strip_suffix("[]") {
-        scalar_type(child).map(|_| "STRING".to_owned())
+        scalar_type(child).map(|element| {
+            if lists {
+                format!("{element}[]")
+            } else {
+                "STRING".to_owned()
+            }
+        })
     } else {
         scalar_type(kind).map(str::to_owned)
     }
@@ -233,7 +241,7 @@ fn validate(batch: &Batch) -> Result<()> {
             require(
                 valid_name(&fact.name)
                     && names.insert(&fact.name)
-                    && sql_type(&fact.kind).is_some(),
+                    && sql_type(&fact.kind, true).is_some(),
                 "invalid knowledge fact schema",
             )?;
             if !node.deleted && node.selects(&fact.name) {
@@ -383,6 +391,12 @@ impl KnowledgeAdapter {
                 "_HxnKnowledgeSource",
                 "CREATE NODE TABLE `_HxnKnowledgeSource` (key STRING, revision INT64, digest STRING, PRIMARY KEY (key))",
             ),
+            // The schemas whose array facts are list columns. Graphs from hxn-assets 0.2.2
+            // have none, and their array facts stay JSON text in STRING columns.
+            (
+                "_HxnKnowledgeLayout",
+                "CREATE NODE TABLE `_HxnKnowledgeLayout` (name STRING, PRIMARY KEY (name))",
+            ),
         ] {
             match connection.query(ddl) {
                 Ok(_) => {}
@@ -397,6 +411,7 @@ impl KnowledgeAdapter {
         connection.query("MATCH (s:`_HxnKnowledgeSchema`) RETURN s.name, s.definition LIMIT 0")?;
         connection
             .query("MATCH (s:`_HxnKnowledgeSource`) RETURN s.key, s.revision, s.digest LIMIT 0")?;
+        connection.query("MATCH (l:`_HxnKnowledgeLayout`) RETURN l.name LIMIT 0")?;
         Ok(Self { connection })
     }
 
@@ -443,6 +458,17 @@ impl KnowledgeAdapter {
             let schema: Schema = serde_json::from_str(value)?;
             schemas.insert(schema.name.clone(), schema);
         }
+        let mut lists = HashSet::<String>::new();
+        for row in self
+            .connection
+            .query("MATCH (l:`_HxnKnowledgeLayout`) RETURN l.name")?
+            .iter_rows()
+        {
+            let TypedValue::String(name) = &row[0] else {
+                return Err(KnowledgeError("invalid stored schema layout".into()));
+            };
+            lists.insert(name.to_string());
+        }
         let mut new = BTreeMap::new();
         for node in &batch.nodes {
             let schema = &node.schema;
@@ -466,7 +492,7 @@ impl KnowledgeAdapter {
         }
         // DDL may register an unused schema after failure; data and watermark updates follow validation.
         for schema in new.values() {
-            self.create_node_table(schema)?;
+            self.create_node_table(schema, true)?;
         }
         for schema in new.values() {
             self.create_relation_tables(schema)?;
@@ -479,6 +505,11 @@ impl KnowledgeAdapter {
                     ("definition", string(serde_json::to_string(schema)?)),
                 ]),
             )?;
+            self.connection.query_with_params(
+                "CREATE (l:`_HxnKnowledgeLayout` {name:$name})",
+                params([("name", string(&schema.name))]),
+            )?;
+            lists.insert(schema.name.clone());
         }
 
         // One lookup per semantic type: the owner, outgoing links and tombstone of each entity named.
@@ -587,7 +618,10 @@ impl KnowledgeAdapter {
             // An upsert names only the columns it changes; KyuGraph keeps the rest.
             for fact in schema.facts.iter().filter(|fact| node.selects(&fact.name)) {
                 let value = node.facts.get(&fact.name).cloned().unwrap_or(Value::Null);
-                properties.push((fact.name.clone(), typed_value(value, &fact.kind)));
+                properties.push((
+                    fact.name.clone(),
+                    typed_value(value, &fact.kind, lists.contains(&schema.name)),
+                ));
             }
             if schema
                 .spatial
@@ -665,7 +699,7 @@ impl KnowledgeAdapter {
         Ok(ApplyOutcome::Applied)
     }
 
-    fn create_node_table(&self, schema: &Schema) -> Result<()> {
+    fn create_node_table(&self, schema: &Schema, lists: bool) -> Result<()> {
         let mut fields = vec![
             "_hxn_key STRING".into(),
             "_hxn_namespace STRING".into(),
@@ -681,7 +715,7 @@ impl KnowledgeAdapter {
             fields.push(format!(
                 "{} {}",
                 quote(&fact.name),
-                sql_type(&fact.kind).expect("validated fact type")
+                sql_type(&fact.kind, lists).expect("validated fact type")
             ));
         }
         if schema.spatial.is_some() {
@@ -720,13 +754,25 @@ impl KnowledgeAdapter {
     }
 }
 
-fn typed_value(value: Value, kind: &str) -> TypedValue {
+// Converts a validated fact to the value of its column. With `lists`, an array fact is a
+// list of its elements; without, it is JSON text, as graphs from hxn-assets 0.2.2 hold it.
+fn typed_value(value: Value, kind: &str, lists: bool) -> TypedValue {
     if value.is_null() {
         return TypedValue::Null;
     }
-    // KyuGraph 0.4 DDL cannot declare list columns; preserve scalar arrays as JSON text.
-    if kind.ends_with("[]") {
-        return string(serde_json::to_string(&value).expect("validated scalar array"));
+    if let Some(element) = kind.strip_suffix("[]") {
+        if !lists {
+            return string(serde_json::to_string(&value).expect("validated scalar array"));
+        }
+        let Value::Array(items) = value else {
+            unreachable!("validated scalar array")
+        };
+        return TypedValue::List(
+            items
+                .into_iter()
+                .map(|item| typed_value(item, element, lists))
+                .collect(),
+        );
     }
     if kind == "float" {
         return TypedValue::Double(value.as_f64().expect("validated float"));
@@ -851,6 +897,69 @@ mod tests {
         assert_eq!(
             adapter.apply_json(&update).expect("replay"),
             ApplyOutcome::Replayed
+        );
+    }
+
+    fn tagged() -> Value {
+        json!({"name":"Lore","version":1,"identity":"id","facts":[
+            {"name":"tags","kind":"string[]","nullable":false},
+            {"name":"weights","kind":"float[]","nullable":true}
+        ],"relations":[],"spatial":null})
+    }
+
+    #[test]
+    fn array_facts_are_list_columns() {
+        let (_database, mut adapter) = adapter();
+        let facts = json!({"tags":["water","deep"],"weights":[1, 0.5]});
+        adapter
+            .apply_json(&batch(
+                1,
+                1,
+                vec![node(&tagged(), "sea", facts, json!([]), Value::Null)],
+            ))
+            .expect("apply");
+        assert_eq!(
+            rows(
+                &adapter,
+                "MATCH (l:Lore) WHERE 'deep' IN l.tags RETURN l.tags, l.weights"
+            ),
+            vec![vec![
+                TypedValue::List(vec![string("water"), string("deep")]),
+                TypedValue::List(vec![TypedValue::Double(1.0), TypedValue::Double(0.5)]),
+            ]]
+        );
+    }
+
+    #[test]
+    fn schemas_from_older_graphs_keep_arrays_as_json() {
+        let (_database, mut adapter) = adapter();
+        // The table and the schema row that hxn-assets 0.2.2 writes, with no layout row.
+        let schema: Schema = serde_json::from_value(tagged()).expect("schema");
+        adapter.create_node_table(&schema, false).expect("table");
+        adapter
+            .connection()
+            .query_with_params(
+                "CREATE (s:`_HxnKnowledgeSchema` {name:$name, definition:$definition})",
+                params([
+                    ("name", string("Lore")),
+                    (
+                        "definition",
+                        string(serde_json::to_string(&schema).expect("json")),
+                    ),
+                ]),
+            )
+            .expect("schema row");
+        let facts = json!({"tags":["water"],"weights":null});
+        adapter
+            .apply_json(&batch(
+                1,
+                1,
+                vec![node(&tagged(), "sea", facts, json!([]), Value::Null)],
+            ))
+            .expect("apply");
+        assert_eq!(
+            rows(&adapter, "MATCH (l:Lore) RETURN l.tags, l.weights"),
+            vec![vec![string("[\"water\"]"), TypedValue::Null]]
         );
     }
 
