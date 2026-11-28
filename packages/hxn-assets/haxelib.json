@@ -1,17 +1,17 @@
 {
   "name": "hxn-assets",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "license": "Apache",
   "url": "https://github.com/hx-n/hxn-assets",
   "description": "Typed assets, asynchronous loading and semantic knowledge metadata",
   "contributors": [
     "darmie"
   ],
-  "releasenote": "Bindings for x86_64-linux-android, for Android emulators.",
+  "releasenote": "New schemas store array facts as KyuGraph list columns, which IN filters on. The hxn assets commands use hxn.cli from hxn 0.3.11. hxn-file reads the assets of an APK that hxn builds.",
   "classPath": "src",
   "dependencies": {
     "hxn": "0.3.11",
-    "hxn-file": "0.2.2",
+    "hxn-file": "0.2.3",
     "format": "3.8.0"
   },
   "hxn": {

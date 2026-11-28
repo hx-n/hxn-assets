@@ -698,7 +698,7 @@ source = "git+https://github.com/hx-n/hxn.git?tag=v0.3.11#da060b2d6570988d21d030
 
 [[package]]
 name = "hxn-assets"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "hxn",
  "hxn-assets-kyugraph",
@@ -708,7 +708,7 @@ dependencies = [
 
 [[package]]
 name = "hxn-assets-jit-build"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "hxn",
  "hxn-assets-kyugraph",
@@ -718,7 +718,7 @@ dependencies = [
 
 [[package]]
 name = "hxn-assets-kyugraph"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "kyu-graph",
  "serde",
@@ -728,7 +728,7 @@ dependencies = [
 
 [[package]]
 name = "hxn-file"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "cap-std",
  "cc",

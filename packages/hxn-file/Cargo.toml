@@ -14,7 +14,7 @@ name = "hxn_file"
 library = "file"
 haxelib = "hxn-file"
 contributors = ["darmie"]
-releasenote = "Bindings for x86_64-linux-android, for Android emulators."
+releasenote = "Reads the assets of an APK that hxn builds, and takes the activity from the hxn-window host."
 haxe = "../../tests/check"
 init = ["hxn.file.Init.register()"]
 haxe-flags = ["-D", "hxn_assets_dir=../../tests/fixtures/assets"]

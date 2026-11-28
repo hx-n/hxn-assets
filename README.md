@@ -10,10 +10,10 @@ annotated assets, dependency loading and optional content addressing. Both work
 on native and browser runtimes through hxn; applications can use hxn-file alone.
 
 ```text
-haxelib install hxn-assets 0.2.2
+haxelib install hxn-assets 0.2.3
 ```
 
-This installs hxn-file too. Use `haxelib install hxn-file 0.2.2` for file I/O alone.
+This installs hxn-file too. Use `haxelib install hxn-file 0.2.3` for file I/O alone.
 
 ## hxn-file: files, saves and preferences
 

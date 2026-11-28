@@ -16,7 +16,7 @@ path = "native-src/lib.rs"
 library = "assets"
 haxelib = "hxn-assets"
 contributors = ["darmie"]
-releasenote = "Bindings for x86_64-linux-android, for Android emulators."
+releasenote = "New schemas store array facts as KyuGraph list columns, which IN filters on. The hxn assets commands use hxn.cli from hxn 0.3.11. hxn-file reads the assets of an APK that hxn builds."
 haxe = "../../tests/knowledge-native"
 haxe-flags = ["-lib", "hxn:0.3.11", "-lib", "format:3.8.0", "-cp", "../../examples/knowledge", "-D", "hxn_assets_dir=../../examples/knowledge/assets", "-lib", "hxn-file", "-cp", "src"]
 

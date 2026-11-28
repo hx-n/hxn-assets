@@ -1,3 +1,5 @@
+0.2.3: New schemas store array facts as KyuGraph list columns, which IN filters on their members. Schemas in graphs from 0.2.2 keep their arrays as JSON text. hxn-file reads the assets of an APK that hxn builds, and takes the VM and the activity from the hxn-window host. The hxn assets commands use hxn.cli from hxn 0.3.11.
+
 0.2.2: Both haxelibs carry bindings for x86_64-linux-android, which Android emulators on x86_64 machines run.
 
 0.2.1: `hxn.assets.Assets.process(fields)` lets another build macro change the fields of a declaration class first and then run hxn-assets' generation on them. Knowledge snapshots publish only the parts that change, and the graph uses KyuGraph 81bb070.

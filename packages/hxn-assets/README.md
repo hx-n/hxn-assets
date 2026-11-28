@@ -1,7 +1,7 @@
 # hxn-assets
 
 ```text
-haxelib install hxn-assets 0.2.2
+haxelib install hxn-assets 0.2.3
 ```
 
 Declare assets in Haxe metadata and read them as their actual data types.

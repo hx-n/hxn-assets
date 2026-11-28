@@ -1,11 +1,11 @@
 {
   "name": "hxn-file",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Asynchronous files, application persistence and remote URI I/O for Haxe",
   "url": "https://github.com/hx-n/hxn-assets",
   "license": "Apache",
   "tags": ["hxcpp", "hashlink", "cppia", "native", "cross", "wasm"],
   "contributors": ["darmie"],
-  "releasenote": "Bindings for x86_64-linux-android, for Android emulators.",
+  "releasenote": "Reads the assets of an APK that hxn builds, and takes the activity from the hxn-window host.",
   "dependencies": { "hxn": "0.3.11" }
 }
