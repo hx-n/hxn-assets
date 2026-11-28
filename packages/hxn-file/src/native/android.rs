@@ -17,6 +17,7 @@ unsafe extern "C" {
     ) -> *mut c_void;
     fn hxn_file_android_read(asset: *mut c_void, bytes: *mut c_void, size: u32) -> i32;
     fn hxn_file_android_close(asset: *mut c_void);
+    fn hxn_file_android_host(vm: *mut *mut c_void, activity: *mut *mut c_void) -> i32;
 }
 
 // AAssetManager permits concurrent opens. Each operation owns its AAsset;
@@ -27,10 +28,17 @@ pub struct Assets {
 }
 impl Assets {
     pub fn new() -> Result<Self, String> {
-        let context = std::panic::catch_unwind(ndk_context::android_context)
-            .map_err(|_| "Android host must initialize ndk-context before opening storage")?;
+        // The window host's activity comes first. This library's copy of ndk-context is
+        // set only when the host is linked into the same Rust crate graph.
+        let (mut vm, mut activity) = (std::ptr::null_mut(), std::ptr::null_mut());
+        if unsafe { hxn_file_android_host(&mut vm, &mut activity) } == 0 {
+            let context = std::panic::catch_unwind(ndk_context::android_context).map_err(|_| {
+                "Android host must define hxn_android_context or initialize ndk-context before opening storage"
+            })?;
+            (vm, activity) = (context.vm(), context.context());
+        }
         let mut path = std::ptr::null_mut();
-        let state = unsafe { hxn_file_android_new(context.vm(), context.context(), &mut path) };
+        let state = unsafe { hxn_file_android_new(vm, activity, &mut path) };
         if state.is_null() {
             return Err("Android AssetManager/application directory is unavailable".into());
         }
@@ -55,8 +63,10 @@ impl Assets {
             }
         }
     }
+    /// Reads `assets/<name>` from the APK, which holds the program's directory as its
+    /// assets, as an iOS bundle does.
     pub fn read(&self, name: &str) -> Result<Vec<u8>, String> {
-        let name = CString::new(name).map_err(|e| e.to_string())?;
+        let name = CString::new(format!("assets/{name}")).map_err(|e| e.to_string())?;
         let mut size = 0;
         let pointer =
             unsafe { hxn_file_android_open(self.state as *mut c_void, name.as_ptr(), &mut size) };

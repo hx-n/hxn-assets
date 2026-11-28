@@ -156,7 +156,7 @@ def main():
                     z.write(dex / "classes.dex", "classes.dex")
                     z.write(out / "libhxn_asset_check.so", "lib/arm64-v8a/libhxn_asset_check.so")
                     for asset in (out / "assets").rglob("*"):
-                        if asset.is_file(): z.write(asset, "assets/" + str(asset.relative_to(out / "assets")))
+                        if asset.is_file(): z.write(asset, "assets/assets/" + str(asset.relative_to(out / "assets")))
                 key = work / "test.keystore"
                 if not key.exists(): run([java / "bin/keytool", "-genkeypair", "-keystore", key, "-storepass", "android", "-keypass", "android", "-alias", "test", "-dname", "CN=Asset test", "-keyalg", "RSA", "-validity", "3650"])
                 run([build / "apksigner", "sign", "--ks", key, "--ks-pass", "pass:android", apk])

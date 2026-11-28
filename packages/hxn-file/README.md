@@ -20,8 +20,10 @@ saves reject, while a missing preference returns `{found: false, value: ""}`.
 
 Put bundled files under `assets/`, or select a directory with
 `-D hxn_assets_dir=<directory>`. The init macro copies them beside compiler output.
-Mobile application hosts must package that directory as bundle/APK assets.
-An Android host must initialize `ndk-context` with its VM and application context.
+Mobile application hosts package the program's directory, so that the files are
+under `assets/` in the iOS bundle and in the APK's assets. `hxn build` writes both.
+On Android, hxn-file takes the VM and the activity from `hxn_android_context`, which
+the hxn-window host defines. Without it, the host must initialize `ndk-context`.
 
 Desktop defaults use an application-specific data directory; iOS uses Application
 Support, Android uses its private files directory, and browser persistence uses

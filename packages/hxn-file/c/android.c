@@ -78,6 +78,14 @@ void hxn_file_android_free(void *pointer) {
     free(state);
 }
 void hxn_file_string_free(char *value) { free(value); }
+
+/* Defined by the window host of a program built as an Android app. Weak, so a program
+   without one, such as an executable run under adb shell, links and finds no host. */
+extern int hxn_android_context(void **vm, void **activity) __attribute__((weak));
+
+int hxn_file_android_host(void **vm, void **activity) {
+    return hxn_android_context ? hxn_android_context(vm, activity) : 0;
+}
 void *hxn_file_android_open(void *pointer, const char *name, int64_t *size) {
     HxnFileAndroid *state = pointer;
     AAsset *asset = AAssetManager_open(state->native, name, AASSET_MODE_STREAMING);
